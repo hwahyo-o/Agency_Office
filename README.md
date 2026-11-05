@@ -35,7 +35,7 @@ Node.js가 없으면 https://nodejs.org/en/download 에서 Windows용 공식 ZIP
 - 이 도구는 연결 검증 전용입니다. 지속 로그인·예약·Discord 연결·원격 서버 설치는 포함하지 않습니다.
 - PASS도 무료 원격 운영이나 이미지/영상 제작 지원을 의미하지 않습니다.
 - 인증 정보를 저장하지 않으므로 실제 플랫폼 연결 때 다시 로그인해야 합니다. 반복 실행은 새 앱 등록을 만들 수 있으니 불필요하게 반복하지 마세요. 검증용 앱 권한은 ChatGPT 설정에서 해제할 수 있습니다.
-- 소스는 공개 검토 가능한 형태로 제공하지만 GitHub 등에 공개 배포된 상태는 아닙니다. 공식 오픈소스 경로의 앱 적격성은 서비스 판단에 따릅니다.
+- 이 저장소는 공개 상태입니다. 공식 오픈소스 경로의 앱 적격성 및 계정 사용 자격은 서비스 판단에 따릅니다.
 
 ## 개발 검증
 `node --test check.test.mjs`
@@ -50,3 +50,8 @@ Node.js가 없으면 https://nodejs.org/en/download 에서 Windows용 공식 ZIP
 
 ## 수정판 1.0.1
 로그인 시작 시 Origin 누락과 충돌할 수 있는 Referrer-Policy를 same-origin으로 변경하고 공식 인증 리디렉션을 CSP에 허용했습니다. /start 직접 열기와 중복 클릭에 복구·안내를 추가했습니다. HTTP 경로 테스트와 단위 테스트 13개 통과. 이 환경에는 Chromium 실행 파일이 없어 실제 브라우저 클릭 테스트는 수행하지 못했습니다.
+
+
+## AI Team Office 로컬 앱
+
+지속 로그인, 계정별 모델 선택, Agency Agents 팀 오케스트레이션을 포함한 로컬 실행 앱은 [README-OFFICE.md](README-OFFICE.md)를 참고하세요. Windows는 `START-OFFICE.cmd`, macOS/Linux는 `node office/server.mjs`로 실행합니다. 기존 연결 점검 도구는 그대로 유지됩니다.

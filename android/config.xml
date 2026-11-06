@@ -16,7 +16,6 @@
     <application android:usesCleartextTraffic="false" android:networkSecurityConfig="@xml/network_security_config" />
   </edit-config>
   <plugin name="@red-mobile/nodejs-mobile-cordova" spec="3.4.2" />
-  <plugin name="cordova-plugin-browsertab" spec="^0.2.0" />
   <plugin name="cordova-plugin-customurlscheme" spec="^5.0.2">
     <variable name="URL_SCHEME" value="ai-team-office" />
     <variable name="ANDROID_SCHEME" value="" />

@@ -47,7 +47,7 @@
       document.addEventListener('deviceready', start, false);
       window.addEventListener('message', event => {
         if (event.origin !== url || event.data?.type !== 'open-auth' || typeof event.data.url !== 'string') return;
-        if (window.cordova?.plugins?.browsertab) window.cordova.plugins.browsertab.openUrl(event.data.url);
+        if (window.cordova?.InAppBrowser) window.cordova.InAppBrowser.open(event.data.url, '_system');
         else window.open(event.data.url, '_system');
       });
       document.addEventListener('resume', () => {

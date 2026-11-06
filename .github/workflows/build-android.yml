@@ -33,7 +33,7 @@ jobs:
           cd android
           npx cordova platform add android@13
           npx cordova plugin add @red-mobile/nodejs-mobile-cordova@3.4.2
-          npx cordova plugin add cordova-plugin-browsertab
+          npx cordova plugin add cordova-plugin-inappbrowser@6.0.1
           npx cordova plugin add cordova-plugin-customurlscheme --variable URL_SCHEME=ai-team-office --variable ANDROID_SCHEME= --variable ANDROID_HOST= --variable ANDROID_PATHPREFIX=/
 
       - name: Sync mobile backend sources

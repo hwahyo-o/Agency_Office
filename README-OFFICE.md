@@ -2,6 +2,12 @@
 
 밝고 미니멀한 로컬 AI 업무 공간입니다. 요청, 할 일, 업무 공간, 자동 업무, AI 팀, 스킬, 커넥터, 라이브러리, 앱, 프로젝트, 전체 작업 내역을 별도 페이지로 제공합니다. 첫 실행에는 예시 작업·프로젝트를 넣지 않습니다.
 
+## Android 앱
+
+Android 앱은 Cordova 컨테이너 안에서 Node 모바일 런타임과 로컬 업무 서버를 실행하도록 구성합니다. Android 기기에 Node.js를 따로 설치하지 않습니다. 계정 연결은 브라우저의 시스템 인증 탭에서 진행하고, 인증이 끝나면 앱 딥링크로 돌아옵니다. GitHub Actions가 생성한 `AI-Team-Office-Android-debug` 빌드 아티팩트의 APK를 Android 기기에 설치할 수 있습니다.
+
+커넥터 카탈로그에는 Google Workspace, Microsoft 365, Notion, GitHub, Slack 등 OAuth 지원 서비스를 표시합니다. 카드에 표시된 OAuth 앱 등록과 리디렉션 설정이 준비되어야 실제 권한 동의를 시작할 수 있습니다. 각 공급자별 앱 등록 정보는 앱마다 다르므로, 연결이 되었다고 가장하지 않습니다.
+
 ## Windows 앱 받기
 
 1. [최신 Windows 앱 다운로드](https://github.com/hwahyo-o/Agency_Office/releases/latest)에서 `AI-Team-Office-Windows-x64.zip`을 받습니다.
@@ -20,7 +26,7 @@ Node.js 22.21.1 런타임과 Windows 실행기가 패키지에 포함되어 있�
 
 공개 `msitarzewski/agency-agents` 저장소의 Markdown 팀원 정의를 불러옵니다. 지휘자가 요청에 맞는 전문가를 최대 3명 배정하고, 전문가 결과를 바탕으로 완성 파일을 만듭니다. 현재 외부 서비스 커넥터가 없는 요청은 가능한 다운로드 파일로 반환하며, 외부 앱에서 작업을 완료했다고 가장하지 않습니다.
 
-## 웹 미리보기
+## 인터랙티브 미리보기
 
 [AI 팀 오피스 인터랙티브 미리보기](https://ai-team-office.hwahyo.chatgpt.site)에서 화면 이동과 디자인을 확인할 수 있습니다. 웹 미리보기는 레이아웃 확인용이며 AI 실행과 파일 생성에는 Windows 앱이 필요합니다.
 

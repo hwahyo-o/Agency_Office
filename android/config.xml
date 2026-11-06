@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.hwahyo.ai.team.office" version="0.2.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>AI 팀 오피스</name>
+  <description>AI 팀과 함께 업무를 분업하고 결과물을 관리합니다.</description>
+  <icon src="res/android/icon.png" />
+  <content src="index.html" />
+  <access origin="https://*" />
+  <access origin="http://127.0.0.1:1455" />
+  <allow-navigation href="http://127.0.0.1:1455/*" />
+  <allow-intent href="https://*" />
+  <allow-intent href="ai-team-office://*" />
+  <preference name="AndroidXEnabled" value="true" />
+  <preference name="Orientation" value="default" />
+  <preference name="SplashScreenDelay" value="0" />
+  <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+    <application android:usesCleartextTraffic="false" android:networkSecurityConfig="@xml/network_security_config" />
+  </edit-config>
+  <plugin name="@red-mobile/nodejs-mobile-cordova" spec="3.4.2" />
+  <plugin name="cordova-plugin-browsertab" spec="^0.2.0" />
+  <plugin name="cordova-plugin-customurlscheme" spec="^5.0.2">
+    <variable name="URL_SCHEME" value="ai-team-office" />
+    <variable name="ANDROID_SCHEME" value="" />
+    <variable name="ANDROID_HOST" value="" />
+    <variable name="ANDROID_PATHPREFIX" value="/" />
+  </plugin>
+  <platform name="android">
+    <resource-file src="res/android/network_security_config.xml" target="app/src/main/res/xml/network_security_config.xml" />
+    <preference name="AndroidWindowSplashScreenBackground" value="#f5f7f9" />
+    <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/android/icon.png" />
+  </platform>
+</widget>

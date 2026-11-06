@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f7f9">
+  <title>AI 팀 오피스</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:#f5f7f9;color:#172231;font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;display:grid;place-items:center}.loading{text-align:center;padding:24px}.mark{display:grid;place-items:center;margin:0 auto 18px;width:58px;height:58px;border-radius:20px;background:#edf3ff;color:#356cf6;font-size:29px}.spinner{width:20px;height:20px;border:2px solid #dfe7f5;border-top-color:#356cf6;border-radius:50%;animation:spin .8s linear infinite;margin:18px auto}@keyframes spin{to{transform:rotate(360deg)}}button{margin-top:16px;border:0;border-radius:10px;background:#356cf6;color:white;font-weight:700;padding:11px 16px;display:none}#officeFrame{display:none;position:fixed;inset:0;width:100%;height:100%;border:0;background:#f5f7f9}
+  </style>
+</head>
+<body>
+  <main class="loading" id="loading"><div class="mark">✳</div><b>AI 팀 오피스</b><div id="message">앱을 준비하고 있습니다.</div><div class="spinner" id="spinner"></div><button id="retry">다시 연결</button></main>
+  <iframe id="officeFrame" title="AI 팀 오피스"></iframe>
+  <script src="cordova.js"></script>
+  <script>
+    (() => {
+      const url = 'http://127.0.0.1:1455';
+      const message = document.getElementById('message');
+      const spinner = document.getElementById('spinner');
+      const retry = document.getElementById('retry');
+      let attempts = 0;
+      function openOffice() {
+        fetch(url + '/api/status').then(response => {
+          if (!response.ok) throw new Error('server');
+          document.getElementById('loading').hidden = true;
+          const frame = document.getElementById('officeFrame');
+          frame.src = url;
+          frame.style.display = 'block';
+        }).catch(() => {
+          if (++attempts < 40) return setTimeout(openOffice, 250);
+          spinner.hidden = true;
+          message.textContent = '앱을 시작하지 못했습니다. 다시 시도해 주세요.';
+          retry.style.display = 'inline-block';
+        });
+      }
+      function start() {
+        if (!window.nodejs) {
+          message.textContent = 'Android 앱 환경을 확인하고 있습니다.';
+          return setTimeout(start, 150);
+        }
+        window.nodejs.start('main.js', error => {
+          if (error) { message.textContent = '업무 엔진을 시작하지 못했습니다.'; return; }
+          openOffice();
+        });
+      }
+      document.addEventListener('deviceready', start, false);
+      window.addEventListener('message', event => {
+        if (event.origin !== url || event.data?.type !== 'open-auth' || typeof event.data.url !== 'string') return;
+        if (window.cordova?.plugins?.browsertab) window.cordova.plugins.browsertab.openUrl(event.data.url);
+        else window.open(event.data.url, '_system');
+      });
+      document.addEventListener('resume', () => {
+        document.getElementById('officeFrame').contentWindow?.postMessage({type: 'app-resume'}, url);
+      }, false);
+      retry.addEventListener('click', () => {attempts = 0; spinner.hidden = false; retry.style.display = 'none'; openOffice();});
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+name: Build AI Team Office for Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'office/**'
+      - '.github/workflows/build-android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Cordova and Android platform
+        run: |
+          npm install --prefix android
+          cd android
+          npx cordova platform add android@13
+          npx cordova plugin add @red-mobile/nodejs-mobile-cordova@3.4.2
+          npx cordova plugin add cordova-plugin-browsertab
+          npx cordova plugin add cordova-plugin-customurlscheme --variable URL_SCHEME=ai-team-office --variable ANDROID_SCHEME= --variable ANDROID_HOST= --variable ANDROID_PATHPREFIX=/
+
+      - name: Sync mobile backend sources
+        run: |
+          rm -rf android/www/nodejs-project/office
+          cp -R office android/www/nodejs-project/office
+
+      - name: Build debug APK
+        run: cd android && npx cordova build android --debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI-Team-Office-Android-debug
+          path: android/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30

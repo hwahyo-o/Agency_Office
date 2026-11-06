@@ -1,0 +1,8 @@
+{
+  "name": "ai-team-office-android",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Android app wrapper for AI Team Office",
+  "scripts": {"build:android": "cordova build android --release"},
+  "devDependencies": {"cordova": "^12.0.0"}
+}

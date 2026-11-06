@@ -6,7 +6,7 @@
 
 Android 앱은 Cordova 컨테이너 안에서 Node 모바일 런타임과 로컬 업무 서버를 실행하도록 구성합니다. Android 기기에 Node.js를 따로 설치하지 않습니다. 계정 연결은 브라우저의 시스템 인증 탭에서 진행하고, 인증이 끝나면 앱 딥링크로 돌아옵니다. GitHub Actions가 생성한 `AI-Team-Office-Android-debug` 빌드 아티팩트의 APK를 Android 기기에 설치할 수 있습니다.
 
-커넥터 카탈로그에는 Google Workspace, Microsoft 365, Notion, GitHub, Slack 등 OAuth 지원 서비스를 표시합니다. 커넥터 카드에서 서비스 개발자 콘솔을 열고, 발급받은 OAuth Client ID와 필요한 경우 Client Secret을 앱 입력란에 저장한 뒤 로그인·승낙 화면을 열 수 있습니다. 설정에는 카드별 요청 권한과 Redirect URI가 표시됩니다. Google Workspace 카드는 Google OAuth 앱 하나를 공유합니다. Secret과 토큰은 이 기기의 사용자 프로필에 저장되며 모델 요청에는 전달하지 않습니다. 공급자가 localhost Redirect URI를 거부하거나 HTTPS 콜백을 요구하면 해당 서비스는 별도 HTTPS 콜백 서버를 구성하기 전까지 연결할 수 없습니다. 현재는 OAuth 승인과 연결 상태 저장을 제공하며, 승인만으로 외부 서비스의 데이터 읽기·쓰기가 자동으로 실행되는 것은 아닙니다.
+커넥터 카탈로그에는 Google Workspace, Microsoft 365, Notion, GitHub, Slack 등 OAuth 지원 서비스와 쌤컷 영상 편집 도구가 있습니다. 쌤컷 카드는 공식 웹 편집기를 새 창으로 열며, 해당 서비스에서 Google 로그인 및 MCP 승낙을 진행합니다. 현재 AI 팀 오피스 내부 MCP 클라이언트는 포함되지 않아, 쌤컷 편집 작업은 쌤컷 웹 화면 또는 MCP를 지원하는 별도 AI 앱에서 진행해야 합니다. 커넥터 카드에서 서비스 개발자 콘솔을 열고, 발급받은 OAuth Client ID와 필요한 경우 Client Secret을 앱 입력란에 저장한 뒤 로그인·승낙 화면을 열 수 있습니다. 설정에는 카드별 요청 권한과 Redirect URI가 표시됩니다. Google Workspace 카드는 Google OAuth 앱 하나를 공유합니다. Secret과 토큰은 이 기기의 사용자 프로필에 저장되며 모델 요청에는 전달하지 않습니다. 공급자가 localhost Redirect URI를 거부하거나 HTTPS 콜백을 요구하면 해당 서비스는 별도 HTTPS 콜백 서버를 구성하기 전까지 연결할 수 없습니다. 현재는 OAuth 승인과 연결 상태 저장을 제공하며, 승인만으로 외부 서비스의 데이터 읽기·쓰기가 자동으로 실행되는 것은 아닙니다.
 
 ## Windows 앱 받기
 

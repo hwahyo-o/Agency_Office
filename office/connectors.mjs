@@ -21,7 +21,7 @@ const services={
   Linear:{provider:'linear',scopes:['read','write']}
 };
 const providers={
-  google:{auth:'https://accounts.google.com/o/oauth2/v2/auth',token:'https://oauth2.googleapis.com/token',pkce:true,secret:false,extra:{access_type:'offline',prompt:'consent'}},
+  google:{auth:'https://accounts.google.com/o/oauth2/v2/auth',token:'https://oauth2.googleapis.com/token',pkce:true,secret:true,extra:{access_type:'offline',prompt:'consent'}},
   notion:{auth:'https://api.notion.com/v1/oauth/authorize',token:'https://api.notion.com/v1/oauth/token',pkce:false,secret:true,basic:true,json:true},
   github:{auth:'https://github.com/login/oauth/authorize',token:'https://github.com/login/oauth/access_token',pkce:false,secret:true,json:true},
   gitlab:{auth:'https://gitlab.com/oauth/authorize',token:'https://gitlab.com/oauth/token',pkce:true,secret:true},
@@ -42,7 +42,7 @@ export function createConnectors(storeDir){
   const states=new Map(),trelloRequests=new Map();
   async function save(path,value){await mkdir(storeDir,{recursive:true,mode:0o700});await writeFile(path,JSON.stringify(value),{mode:0o600});try{await chmod(path,0o600)}catch{}}
   async function load(){try{config=JSON.parse(await readFile(configFile,'utf8'))}catch{}try{tokens=JSON.parse(await readFile(tokenFile,'utf8'))}catch{}}
-  function overview(){return Object.entries(services).map(([name,item])=>({name,provider:item.provider,configured:!!config[item.provider]?.clientId,clientId:config[item.provider]?.clientId||'',connected:!!tokens[name]?.access_token||!!tokens[name]?.oauth_token,email:tokens[name]?.email||'',redirectUri:`${CALLBACK}/${item.provider}`,scopes:item.scopes}))}
+  function overview(){return Object.entries(services).map(([name,item])=>({name,provider:item.provider,secretRequired:!!providers[item.provider]?.secret||item.provider==='trello',configured:!!config[item.provider]?.clientId,clientId:config[item.provider]?.clientId||'',connected:!!tokens[name]?.access_token||!!tokens[name]?.oauth_token,email:tokens[name]?.email||'',redirectUri:`${CALLBACK}/${item.provider}`,scopes:item.scopes}))}
   async function readBody(req,max=100000){const parts=[];let size=0;for await(const part of req){size+=part.length;if(size>max)throw Error('request_too_large');parts.push(part)}return JSON.parse(Buffer.concat(parts).toString('utf8')||'{}')}
   async function json(url,options={}){const response=await fetch(url,{...options,redirect:'error',signal:AbortSignal.timeout(60000)});const text=await response.text();let body;try{body=JSON.parse(text)}catch{body=Object.fromEntries(new URLSearchParams(text))}if(!response.ok||body.error)throw Error(body.error_description||body.error||`oauth_http_${response.status}`);return body}
   function trelloHeader(method,url,params,client,secret,token='',tokenSecret=''){

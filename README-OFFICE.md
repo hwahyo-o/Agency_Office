@@ -5,7 +5,7 @@ This adds a local AI team workspace to the existing ChatGPT plan connection chec
 ## Run
 
 1. Download or clone this repository.
-2. Install Node.js 22 or newer if it is not already installed.
+2. The launcher uses an existing Node.js 22+ runtime or downloads the official portable Node.js 22 ZIP into your user app-data folder, then checks its SHA-256 checksum. It does not install Node.js system-wide or require administrator permission.
 3. On Windows, run `START-OFFICE.cmd`. On macOS/Linux, run `node office/server.mjs` from the repository folder.
 4. Open `http://127.0.0.1:1455/`, choose **Continue with ChatGPT**, then review and approve the requested ChatGPT plan usage.
 5. Pick a model available to the connected account and submit a task to the orchestrator.

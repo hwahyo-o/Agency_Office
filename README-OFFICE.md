@@ -6,7 +6,7 @@
 
 Android 앱은 Cordova 컨테이너 안에서 Node 모바일 런타임과 로컬 업무 서버를 실행하도록 구성합니다. Android 기기에 Node.js를 따로 설치하지 않습니다. 계정 연결은 브라우저의 시스템 인증 탭에서 진행하고, 인증이 끝나면 앱 딥링크로 돌아옵니다. GitHub Actions가 생성한 `AI-Team-Office-Android-debug` 빌드 아티팩트의 APK를 Android 기기에 설치할 수 있습니다.
 
-커넥터 카탈로그에는 Google Workspace, Microsoft 365, Notion, GitHub, Slack 등 OAuth 지원 서비스를 표시합니다. 현재 커넥터 카드는 서비스별 개발자 콘솔로 연결되는 설정 안내입니다. 로그인·승낙 화면을 앱에서 열려면 서비스별 OAuth 앱 등록, 클라이언트 ID, 정확한 리디렉션 주소와 각 API 연동 코드가 먼저 구성되어야 합니다. 공급자 개발자 계정 및 앱 소유 권한 없이는 이 등록을 대신 완료할 수 없으므로 연결 상태를 가장하지 않습니다.
+커넥터 카탈로그에는 Google Workspace, Microsoft 365, Notion, GitHub, Slack 등 OAuth 지원 서비스를 표시합니다. 커넥터 카드에서 서비스 개발자 콘솔을 열고, 발급받은 OAuth Client ID와 필요한 경우 Client Secret을 앱 입력란에 저장한 뒤 로그인·승낙 화면을 열 수 있습니다. 설정에는 카드별 요청 권한과 Redirect URI가 표시됩니다. Google Workspace 카드는 Google OAuth 앱 하나를 공유합니다. Secret과 토큰은 이 기기의 사용자 프로필에 저장되며 모델 요청에는 전달하지 않습니다. 공급자가 localhost Redirect URI를 거부하거나 HTTPS 콜백을 요구하면 해당 서비스는 별도 HTTPS 콜백 서버를 구성하기 전까지 연결할 수 없습니다. 현재는 OAuth 승인과 연결 상태 저장을 제공하며, 승인만으로 외부 서비스의 데이터 읽기·쓰기가 자동으로 실행되는 것은 아닙니다.
 
 ## Windows 앱 받기
 
@@ -18,7 +18,7 @@ Node.js 22.21.1 런타임과 Windows 실행기가 패키지에 포함되어 있�
 
 ## 작업 결과 파일
 
-새 작업에는 이미지, 문서, 코드 파일, 폴더, 클립보드 이미지, 참고 URL을 첨부할 수 있습니다. 동영상은 원본을 직접 전송하지 않고 장면 이미지 최대 8개로 추출합니다. 요청당 첨부 용량은 50MB입니다. 결과는 자동 선택 또는 CSV, HTML, Markdown, JSON, TXT, SVG, ICS, XML, YAML, SQL, JavaScript, TypeScript, Python, CSS 형식으로 생성할 수 있습니다. 생성된 파일은 화면에서 미리 볼 수 있고 다운로드할 수 있으며, 앱 라이브러리에서도 다시 받을 수 있습니다. CSV는 Excel 또는 Google Sheets로 가져올 수 있습니다. 현재 Google Sheets 같은 외부 서비스에 직접 문서를 만드는 커넥터는 연결되어 있지 않으므로, 외부 서비스 요청은 가져오기용 파일로 제공합니다.
+새 작업에는 이미지, 문서, 코드 파일, 폴더, 클립보드 이미지, 참고 URL을 첨부할 수 있습니다. 동영상은 원본을 직접 전송하지 않고 장면 이미지 최대 8개로 추출합니다. 요청당 첨부 용량은 50MB입니다. 결과는 자동 선택 또는 CSV, HTML, Markdown, JSON, TXT, SVG, PNG, JPG, WebP, MP3, WAV, Opus, AAC, FLAC, WebM, ICS, XML, YAML, SQL, JavaScript, TypeScript, Python, CSS 형식으로 생성할 수 있습니다. WebM은 이미지 장면을 6초 모션 클립으로 인코딩한 파일이며, 완전한 텍스트-투-비디오 생성은 아닙니다. 이미지와 음성 API 기능은 현재 연결된 계정이 해당 요청을 허용하는지에 따라 이용 가능 여부가 달라집니다. 생성된 파일은 화면에서 미리 볼 수 있고 다운로드할 수 있으며, 앱 라이브러리에서도 다시 받을 수 있습니다. CSV는 Excel 또는 Google Sheets로 가져올 수 있습니다. 현재 Google Sheets 같은 외부 서비스에 직접 문서를 만드는 커넥터는 연결되어 있지 않으므로, 외부 서비스 요청은 가져오기용 파일로 제공합니다.
 
 결과 파일은 현재 Windows 사용자의 `%APPDATA%\\ai-team-office\\artifacts`에 저장됩니다. ChatGPT 계정 연결 정보는 별도 프로필 파일에 저장됩니다. 앱은 별도의 OpenAI API 키를 요구하지 않으며, 계정별 모델 접근 및 플랜 사용 한도를 따릅니다.
 

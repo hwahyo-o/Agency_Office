@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'office/server.mjs'
+      - 'office/connectors.mjs'
       - 'office/index.html'
       - 'launcher/**'
       - '.github/workflows/build-portable-windows.yml'
@@ -35,7 +36,7 @@ jobs:
           Copy-Item "node-extract/node-v$version-win-x64/node.exe" package/runtime/node.exe
           Copy-Item "node-extract/node-v$version-win-x64/LICENSE" package/NOTICE-NODE.txt
           New-Item -ItemType Directory -Force package/office | Out-Null
-          Copy-Item office/server.mjs,office/index.html,office/favicon.svg,office/app-icon.svg,office/manifest.webmanifest,office/service-worker.js package/office
+          Copy-Item office/server.mjs,office/connectors.mjs,office/index.html,office/favicon.svg,office/app-icon.svg,office/manifest.webmanifest,office/service-worker.js package/office
           Copy-Item README-OFFICE.md package/README.txt
 
       - name: Build self-contained Windows launcher

@@ -6,7 +6,7 @@
 
 Android 앱은 Cordova 컨테이너 안에서 Node 모바일 런타임과 로컬 업무 서버를 실행하도록 구성합니다. Android 기기에 Node.js를 따로 설치하지 않습니다. 계정 연결은 브라우저의 시스템 인증 탭에서 진행하고, 인증이 끝나면 앱 딥링크로 돌아옵니다. GitHub Actions가 생성한 `AI-Team-Office-Android-debug` 빌드 아티팩트의 APK를 Android 기기에 설치할 수 있습니다.
 
-커넥터 카탈로그에는 Google Workspace, Microsoft 365, Notion, GitHub, Slack 등 OAuth 지원 서비스를 표시합니다. 카드에 표시된 OAuth 앱 등록과 리디렉션 설정이 준비되어야 실제 권한 동의를 시작할 수 있습니다. 각 공급자별 앱 등록 정보는 앱마다 다르므로, 연결이 되었다고 가장하지 않습니다.
+커넥터 카탈로그에는 Google Workspace, Microsoft 365, Notion, GitHub, Slack 등 OAuth 지원 서비스를 표시합니다. 현재 커넥터 카드는 서비스별 개발자 콘솔로 연결되는 설정 안내입니다. 로그인·승낙 화면을 앱에서 열려면 서비스별 OAuth 앱 등록, 클라이언트 ID, 정확한 리디렉션 주소와 각 API 연동 코드가 먼저 구성되어야 합니다. 공급자 개발자 계정 및 앱 소유 권한 없이는 이 등록을 대신 완료할 수 없으므로 연결 상태를 가장하지 않습니다.
 
 ## Windows 앱 받기
 
@@ -18,7 +18,7 @@ Node.js 22.21.1 런타임과 Windows 실행기가 패키지에 포함되어 있�
 
 ## 작업 결과 파일
 
-새 작업에서 출력 형식을 자동 선택하거나 CSV, HTML, Markdown, JSON, TXT로 지정할 수 있습니다. 생성된 파일은 화면에서 미리 볼 수 있고 다운로드할 수 있으며, 앱 라이브러리에서도 다시 받을 수 있습니다. CSV는 Excel 또는 Google Sheets로 가져올 수 있습니다. 현재 Google Sheets 같은 외부 서비스에 직접 문서를 만드는 커넥터는 연결되어 있지 않으므로, 외부 서비스 요청은 가져오기용 파일로 제공합니다.
+새 작업에는 이미지, 문서, 코드 파일, 폴더, 클립보드 이미지, 참고 URL을 첨부할 수 있습니다. 동영상은 원본을 직접 전송하지 않고 장면 이미지 최대 8개로 추출합니다. 요청당 첨부 용량은 50MB입니다. 결과는 자동 선택 또는 CSV, HTML, Markdown, JSON, TXT, SVG, ICS, XML, YAML, SQL, JavaScript, TypeScript, Python, CSS 형식으로 생성할 수 있습니다. 생성된 파일은 화면에서 미리 볼 수 있고 다운로드할 수 있으며, 앱 라이브러리에서도 다시 받을 수 있습니다. CSV는 Excel 또는 Google Sheets로 가져올 수 있습니다. 현재 Google Sheets 같은 외부 서비스에 직접 문서를 만드는 커넥터는 연결되어 있지 않으므로, 외부 서비스 요청은 가져오기용 파일로 제공합니다.
 
 결과 파일은 현재 Windows 사용자의 `%APPDATA%\\ai-team-office\\artifacts`에 저장됩니다. ChatGPT 계정 연결 정보는 별도 프로필 파일에 저장됩니다. 앱은 별도의 OpenAI API 키를 요구하지 않으며, 계정별 모델 접근 및 플랜 사용 한도를 따릅니다.
 

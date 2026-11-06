@@ -9,8 +9,8 @@ New-Item -ItemType Directory -Force -Path $temp | Out-Null
 try {
     $archive = Join-Path $temp $archiveName
     $checksums = Join-Path $temp 'SHASUMS256.txt'
-    Invoke-WebRequest -Uri "$base/$archiveName" -OutFile $archive
-    Invoke-WebRequest -Uri "$base/SHASUMS256.txt" -OutFile $checksums
+    Invoke-WebRequest -Uri "$base/$archiveName" -UseBasicParsing -OutFile $archive
+    Invoke-WebRequest -Uri "$base/SHASUMS256.txt" -UseBasicParsing -OutFile $checksums
     $line = Select-String -Path $checksums -Pattern ("\s" + [regex]::Escape($archiveName) + '$') | Select-Object -First 1
     if (-not $line) { throw 'Official checksum entry was not found.' }
     $expected = ($line.Line.Trim() -split '\s+')[0].ToLowerInvariant()

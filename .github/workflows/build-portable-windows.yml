@@ -1,0 +1,55 @@
+name: Build portable Windows app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'office/server.mjs'
+      - 'office/index.html'
+      - 'launcher/**'
+      - '.github/workflows/build-portable-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Download and verify bundled Node.js
+        shell: pwsh
+        run: |
+          $version = '22.21.1'
+          $archive = "node-v$version-win-x64.zip"
+          $url = "https://nodejs.org/dist/v$version/$archive"
+          $expected = '3c624e9fbe07e3217552ec52a0f84e2bdc2e6ffa7348f3fdfb9fbf8f42e23fcf'
+          Invoke-WebRequest $url -OutFile $archive
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Node.js archive checksum mismatch: $actual" }
+          Expand-Archive $archive -DestinationPath node-extract
+          New-Item -ItemType Directory -Force package/runtime | Out-Null
+          Copy-Item "node-extract/node-v$version-win-x64/node.exe" package/runtime/node.exe
+          Copy-Item "node-extract/node-v$version-win-x64/LICENSE" package/NOTICE-NODE.txt
+          New-Item -ItemType Directory -Force package/office | Out-Null
+          Copy-Item office/server.mjs,office/index.html package/office
+          Copy-Item README-OFFICE.md package/README.txt
+
+      - name: Build self-contained Windows launcher
+        run: dotnet publish launcher/AI-Team-Office.csproj -c Release -r win-x64 --self-contained true -o package -p:PublishSingleFile=true
+
+      - name: Package app
+        shell: pwsh
+        run: Compress-Archive -Path package/* -DestinationPath AI-Team-Office-Windows-x64.zip -CompressionLevel Optimal
+
+      - name: Publish downloadable app
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ai-office-v0.1.${{ github.run_number }}
+          name: AI Team Office Windows v0.1.${{ github.run_number }}
+          make_latest: true
+          generate_release_notes: true
+          files: AI-Team-Office-Windows-x64.zip

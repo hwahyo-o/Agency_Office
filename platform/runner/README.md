@@ -26,7 +26,7 @@ The local CLI should use the user's existing Codex sign-in. Do not require an Op
 4. Copy `runner.example.json` to `~/.config/agency-office/runner.json`. Set the deployed `apiUrl`, one-time `token`, and absolute `projectDir` to the Git repository root.
 5. Restrict the config file to your account (for example, `chmod 600 ~/.config/agency-office/runner.json`) and run `node platform/runner/runner.mjs`.
 
-The runner sends task text, role instructions, progress, approval metadata when supported by the adapter, and final responses through the authenticated API. It does not receive a Supabase service key. Each thread gets a branch in a sibling `.agency-office-worktrees/<thread-id>` folder. Review the branch before merging it into your main checkout.
+The runner sends task text, role instructions, progress, approval metadata when supported by the adapter, and final responses through the authenticated API. A silent heartbeat renews the two-minute run lease every 30 seconds while a CLI is working. It does not receive a Supabase service key. Each thread gets a branch in a sibling `.agency-office-worktrees/<thread-id>` folder. Review the branch before merging it into your main checkout.
 
 ## Trust boundary
 

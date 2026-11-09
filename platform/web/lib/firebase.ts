@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getAnalytics, isSupported, logEvent } from 'firebase/analytics';
 
 export async function trackPageView() {
   const measurementId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
@@ -15,5 +15,6 @@ export async function trackPageView() {
     ? getApp()
     : initializeApp({ measurementId, apiKey, appId, projectId, authDomain });
 
-  getAnalytics(app);
+  const analytics = getAnalytics(app);
+  logEvent(analytics, 'page_view', { page_path: window.location.pathname });
 }

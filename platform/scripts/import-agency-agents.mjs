@@ -22,7 +22,10 @@ async function fetchJson(url, options = {}) {
     throw new Error(`Request failed (${response.status}): ${url}`);
   }
 
-  return response.json();
+  if (response.status === 204) return null;
+
+  const body = await response.text();
+  return body ? JSON.parse(body) : null;
 }
 
 async function fetchText(url) {

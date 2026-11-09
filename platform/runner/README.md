@@ -24,9 +24,9 @@ The local CLI should use the user's existing Codex sign-in. Do not require an Op
 2. Apply the Supabase migrations in filename order and configure `SUPABASE_SERVICE_ROLE_KEY` in the Next.js server environment only.
 3. Deploy the web control plane, sign in, open **실행기 연결**, choose the adapter for this runner, register the PC, and copy the one-time token.
 4. Copy `runner.example.json` to `~/.config/agency-office/runner.json`. Set the deployed `apiUrl`, one-time `token`, and absolute `projectDir` to the Git repository root.
-5. Restrict the config file to your account (for example, `chmod 600 ~/.config/agency-office/runner.json`) and run `node platform/runner/runner.mjs`.
+5. Restrict the config file to your account (for example, `chmod 600 ~/.config/agency-office/runner.json`) and run `cd platform/runner && npm start`.
 
-The runner sends task text, role instructions, progress, approval metadata when supported by the adapter, and final responses through the authenticated API. A silent heartbeat renews the two-minute run lease every 30 seconds while a CLI is working. It does not receive a Supabase service key. Each thread gets a branch in a sibling `.agency-office-worktrees/<thread-id>` folder. Review the branch before merging it into your main checkout.
+The runner sends task text, role instructions, progress, approval metadata when supported by the adapter, and final responses through the authenticated API. Connection failures use exponential reconnect delays capped at 30 seconds. A silent heartbeat renews the two-minute run lease every 30 seconds while a CLI is working. It does not receive a Supabase service key. Each thread gets a branch in a sibling `.agency-office-worktrees/<thread-id>` folder. Review the branch before merging it into your main checkout.
 
 ## Trust boundary
 

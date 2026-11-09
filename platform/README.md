@@ -1,6 +1,6 @@
 # Emma-style AI team platform
 
-This folder contains a separate Next.js implementation beside the existing local AI Office app. The current milestone imports all valid Agency Agents roles, provides Supabase authentication, creates a personal workspace and default channel, and stores task threads, messages, and selected employee runs in Supabase. The app currently queues runs; the local Codex runner and streamed employee replies are still in progress.
+This folder contains a separate Next.js implementation beside the existing local AI Office app. The current milestone imports all valid Agency Agents roles, provides Supabase authentication, creates a personal workspace and default channel, and stores task threads, messages, and selected employee runs in Supabase. The local Codex runner can claim selected employees' work and write final replies to threads; human approvals and visible progress streaming are still in progress.
 
 ## Architecture decisions
 
@@ -13,7 +13,7 @@ This folder contains a separate Next.js implementation beside the existing local
 
 ## Import the employee library
 
-Create a Supabase project and apply `supabase/migrations/202611090001_initial.sql`. Then run the importer from this folder with a server-side service key:
+Create a Supabase project and apply all SQL migrations in `platform/supabase/migrations` in filename order. Then run the importer from this folder with a server-side service key:
 
 ```sh
 SUPABASE_URL=https://<project-ref>.supabase.co \

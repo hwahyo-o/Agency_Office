@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase';
 import { trackPageView } from '@/lib/firebase';
+import { RunnerConnection } from '@/components/runner-connection';
 
 type Agent = {
   id: string;
@@ -560,7 +561,7 @@ export default function HomePage() {
       <section className="office-main">
         <header className="office-topbar">
           <div><span className="topbar-workspace">내 업무 공간</span><span className="breadcrumb"> / {channels.find((channel) => channel.id === activeChannelId)?.name ?? '채널'}</span></div>
-          <span className="runner-state"><i /> 로컬 러너 연결 대기</span>
+          <div className="topbar-actions"><RunnerConnection supabase={supabase} workspaceId={workspaceId} /><span className="runner-state"><i /> 로컬 러너 연결 대기</span></div>
         </header>
 
         <div className="conversation-area">

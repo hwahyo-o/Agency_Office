@@ -71,8 +71,8 @@ begin
         )
       )
     order by run.created_at
-    for update skip locked
-    limit 1;
+    limit 1
+    for update skip locked;
 
   if claimed_run is null then
     return null;

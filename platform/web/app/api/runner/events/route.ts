@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 type RunnerEvent = {
   runId?: string;
   eventKey?: string;
-  type?: 'progress' | 'completed' | 'failed';
+  type?: 'progress' | 'completed' | 'failed' | 'heartbeat';
   content?: string;
   sessionRef?: string;
 };
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   if (!body.runId || !uuidPattern.test(body.runId)) return jsonError('runId가 올바르지 않습니다.', 400);
   if (!body.eventKey || !uuidPattern.test(body.eventKey)) return jsonError('eventKey가 올바르지 않습니다.', 400);
-  if (!body.type || !['progress', 'completed', 'failed'].includes(body.type)) {
+  if (!body.type || !['progress', 'completed', 'failed', 'heartbeat'].includes(body.type)) {
     return jsonError('이벤트 유형이 올바르지 않습니다.', 400);
   }
   if ((body.content?.length ?? 0) > 40000 || (body.sessionRef?.length ?? 0) > 200) {

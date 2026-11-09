@@ -7,6 +7,7 @@ import { access, mkdir, readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import process from 'node:process';
+import { runCliAdapter } from './adapters.mjs';
 
 const execFileAsync = promisify(execFile);
 const POLL_INTERVAL_MS = 3_000;
@@ -298,34 +299,55 @@ async function runJob(config, job) {
 
   try {
     worktree = await createThreadWorktree(config.projectDir, job.threadId);
-    session = createCodexSession(worktree.path, (approvalRequest) => requestApproval(config, job, approvalRequest));
-    sessionRef = await session.start(sessionRef);
-    await postEvent(config, {
-      runId: job.runId,
-      type: 'progress',
-      content: 'Codex 세션이 작업을 시작했습니다.',
-      sessionRef,
-    });
+    let answer = '';
 
-    let latestProgress = '';
-    progressTimer = setInterval(() => {
-      const nextProgress = session.messageText.slice(-3000);
-      if (!nextProgress || nextProgress === latestProgress) return;
-      latestProgress = nextProgress;
-      void postEvent(config, {
+    if (job.adapter === 'codex') {
+      session = createCodexSession(worktree.path, (approvalRequest) => requestApproval(config, job, approvalRequest));
+      sessionRef = await session.start(sessionRef);
+      await postEvent(config, {
         runId: job.runId,
         type: 'progress',
-        content: nextProgress,
+        content: 'Codex 세션이 작업을 시작했습니다.',
         sessionRef,
-      }).catch((error) => console.warn('진행 상황 저장을 건너뜁니다:', error));
-    }, EVENT_INTERVAL_MS);
+      });
 
-    const answer = await session.run(sessionRef, buildPrompt(job));
+      let latestProgress = '';
+      progressTimer = setInterval(() => {
+        const nextProgress = session.messageText.slice(-3000);
+        if (!nextProgress || nextProgress === latestProgress) return;
+        latestProgress = nextProgress;
+        void postEvent(config, {
+          runId: job.runId,
+          type: 'progress',
+          content: nextProgress,
+          sessionRef,
+        }).catch((error) => console.warn('진행 상황 저장을 건너뜁니다:', error));
+      }, EVENT_INTERVAL_MS);
 
+      answer = await session.run(sessionRef, buildPrompt(job));
+    } else {
+      if (!['claude', 'gemini'].includes(job.adapter)) {
+        throw new Error('지원하지 않는 CLI 어댑터입니다: ' + job.adapter);
+      }
+
+      const adapterName = job.adapter === 'claude' ? 'Claude Code' : 'Gemini CLI';
+      await postEvent(config, {
+        runId: job.runId,
+        type: 'progress',
+        content: adapterName + ' 작업을 시작했습니다. 진행 로그와 승인은 각 CLI의 기본 정책을 따릅니다.',
+        sessionRef,
+      });
+
+      const result = await runCliAdapter(job.adapter, worktree.path, sessionRef, buildPrompt(job));
+      answer = result.text;
+      sessionRef = result.sessionRef;
+    }
+
+    const adapterName = job.adapter === 'codex' ? 'Codex' : job.adapter === 'claude' ? 'Claude Code' : 'Gemini CLI';
     await postEvent(config, {
       runId: job.runId,
       type: 'completed',
-      content: (answer || 'Codex가 작업을 완료했지만 텍스트 응답은 반환하지 않았습니다.') + '\n\n작업 브랜치: ' + worktree.branch + '\n작업 폴더: ' + worktree.path,
+      content: (answer || adapterName + '가 작업을 완료했지만 텍스트 응답은 반환하지 않았습니다.') + '\n\n작업 브랜치: ' + worktree.branch + '\n작업 폴더: ' + worktree.path,
       sessionRef,
     });
     console.info('완료: ' + job.roleName + ' · ' + job.runId);

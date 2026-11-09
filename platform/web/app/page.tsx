@@ -65,6 +65,7 @@ export default function HomePage() {
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const supabase = useMemo(() => createClient(), []);
+  const userId = user?.id;
 
   useEffect(() => {
     void trackPageView();
@@ -213,9 +214,9 @@ export default function HomePage() {
   }, [loadAgents, supabase]);
 
   useEffect(() => {
-    if (!user) return;
-    void initializeWorkspace(user.id);
-  }, [initializeWorkspace, user]);
+    if (!userId) return;
+    void initializeWorkspace(userId);
+  }, [initializeWorkspace, userId]);
 
   useEffect(() => {
     if (!activeChannelId) return;
@@ -345,6 +346,7 @@ export default function HomePage() {
     setRuns([]);
     setTaskTitle('');
     setDraft('');
+    setAgentQuery('');
     setSelectedAgentIds([]);
     setIsComposing(true);
     setNotice('');
@@ -396,6 +398,12 @@ export default function HomePage() {
       }
 
       threadId = createdThread.id;
+    }
+
+    if (!threadId) {
+      setLoading(false);
+      setNotice('작업 스레드를 만들지 못했어요. 다시 시도해 주세요.');
+      return;
     }
 
     const { data: createdMessage, error: messageError } = await supabase
@@ -638,7 +646,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {loading && <p className="loading-note">업무 공간을 불러오고 있어요.</p>}
+          {loading && <p className="loading-note">{workspaceId ? '저장하고 있어요.' : '업무 공간을 불러오고 있어요.'}</p>}
         </div>
       </section>
     </main>

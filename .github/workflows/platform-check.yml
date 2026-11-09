@@ -7,6 +7,7 @@ on:
       - ".github/workflows/platform-check.yml"
   push:
     branches:
+      - main
       - feature/emma-codex-agent-platform
     paths:
       - "platform/**"

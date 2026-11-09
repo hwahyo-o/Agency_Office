@@ -1,0 +1,46 @@
+name: Platform checks
+
+on:
+  pull_request:
+    paths:
+      - "platform/**"
+      - ".github/workflows/platform-check.yml"
+  push:
+    branches:
+      - feature/emma-codex-agent-platform
+    paths:
+      - "platform/**"
+      - ".github/workflows/platform-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  runner-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check runner JavaScript syntax
+        run: |
+          node --check platform/runner/runner.mjs
+          node --check platform/runner/adapters.mjs
+
+  web-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"

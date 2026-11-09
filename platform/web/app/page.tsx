@@ -258,7 +258,7 @@ export default function HomePage() {
 
     const { data: nextRuns, error: runError } = await supabase
       .from('agent_runs')
-      .select('id,source_message_id,agent_template_id,status')
+      .select('id,source_message_id,agent_template_id,status,adapter')
       .eq('workspace_id', workspaceId)
       .in('source_message_id', messageRows.map((message) => message.id));
 
@@ -524,7 +524,7 @@ export default function HomePage() {
     setSelectedAgentIds([]);
     await loadThreads(activeChannelId);
     await loadThread(threadId);
-    setNotice('작업 스레드에 저장했어요. 로컬 Codex 러너가 연결되면 선택한 직원이 대기 작업을 이어받습니다.');
+    setNotice('작업 스레드에 저장했어요. 선택한 CLI 실행기가 연결되면 대기 작업을 이어받습니다.');
   }
 
   const visibleAgents = agents.filter((agent) => {
@@ -674,7 +674,7 @@ export default function HomePage() {
               </div>
               <label className="field-label" htmlFor="task-message">요청 내용</label>
               <textarea id="task-message" className="message-input" placeholder="목표, 참고 자료, 원하는 결과를 적어 주세요." value={draft} onChange={(event) => setDraft(event.target.value)} required />
-              <div className="composer-footer"><span>선택한 직원은 Codex 실행 대기열에 추가됩니다.</span><button className="primary-button" disabled={loading || !draft.trim()}>작업 시작 <span>→</span></button></div>
+              <div className="composer-footer"><span>선택한 직원은 선택한 CLI 실행기에 전달됩니다.</span><button className="primary-button" disabled={loading || !draft.trim()}>작업 시작 <span>→</span></button></div>
             </form>
           ) : (
             <div className="thread-view">
@@ -698,7 +698,7 @@ export default function HomePage() {
                               <div className="run-detail" key={run.id}>
                                 <span className="run-chip">
                                   <i className={run.status === 'completed' ? 'run-dot done' : 'run-dot'} />
-                                  {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {approval && run.status === 'running' ? '승인 대기' : run.status === 'queued' ? '대기 중' : run.status}
+                                  {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {run.adapter.toUpperCase()} · {approval && run.status === 'running' ? '승인 대기' : run.status === 'queued' ? '대기 중' : run.status}
                                 </span>
                                 {latestEvent?.content && <p className="run-progress">{latestEvent.content}</p>}
                                 {approval && (

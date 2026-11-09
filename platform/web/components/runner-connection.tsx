@@ -124,9 +124,9 @@ export function RunnerConnection({ supabase, workspaceId }: Props) {
         }}>
           <section className="runner-modal" role="dialog" aria-modal="true" aria-labelledby="runner-title">
             <button className="runner-modal-close" type="button" onClick={() => setIsOpen(false)} aria-label="닫기">×</button>
-            <p className="eyebrow">LOCAL CODEX RUNNER</p>
-            <h2 id="runner-title">내 PC의 Codex CLI 연결</h2>
-            <p className="muted">실행기는 PC에서 직접 동작합니다. 웹 서버에 Codex 로그인 정보나 프로젝트 파일을 보내지 않습니다.</p>
+            <p className="eyebrow">LOCAL CLI RUNNER</p>
+            <h2 id="runner-title">내 PC의 AI CLI 연결</h2>
+            <p className="muted">실행기는 PC에서 직접 동작합니다. 로그인 정보나 프로젝트 파일을 웹 서버에 보내지 않습니다.</p>
 
             {enrollment ? (
               <div className="runner-token-panel">
@@ -165,7 +165,7 @@ export function RunnerConnection({ supabase, workspaceId }: Props) {
             <div className="runner-setup-note">
               <strong>토큰 발급 후 실행</strong>
               <code>node platform/runner/runner.mjs</code>
-              <small>PC에서 Codex CLI 로그인과 프로젝트 폴더 설정이 필요합니다. 자세한 설정은 저장소의 runner 안내를 따라 주세요.</small>
+              <small>PC에서 선택한 CLI 로그인과 프로젝트 폴더 설정이 필요합니다. 자세한 설정은 저장소의 runner 안내를 따라 주세요.</small>
             </div>
           </section>
         </div>

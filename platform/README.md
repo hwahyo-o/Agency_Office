@@ -50,7 +50,7 @@ Firebase web configuration has been provided for project `ai-team-9c0b5`. Add it
 
 ## Next milestones
 
-1. Add adapters for other local interactive coding CLIs.
-2. Improve reconnect recovery and add an installer for Windows/macOS/Linux.
-3. Verify the app-server approval and worktree flows on supported Codex versions.
-4. Deploy the personal preview to Vercel Hobby after the remaining features are ready.
+1. Add adapters for other local interactive coding CLIs after checking their session and permission behavior.
+2. Package the runner for Windows/macOS/Linux and validate reconnect recovery on real CLI sessions.
+3. Verify Codex approval and worktree flows on supported CLI versions.
+4. Configure Vercel environment variables and deploy the personal preview to Hobby.

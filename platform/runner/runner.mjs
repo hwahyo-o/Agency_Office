@@ -296,9 +296,18 @@ async function runJob(config, job) {
   let worktree;
   let sessionRef = job.sessionRef ?? null;
   let progressTimer;
+  let heartbeatTimer;
 
   try {
     worktree = await createThreadWorktree(config.projectDir, job.threadId);
+    heartbeatTimer = setInterval(() => {
+      void postEvent(config, {
+        runId: job.runId,
+        type: 'heartbeat',
+        sessionRef,
+      }).catch((error) => console.warn('실행기 임대 갱신 실패:', error));
+    }, 30_000);
+
     let answer = '';
 
     if (job.adapter === 'codex') {
@@ -366,6 +375,7 @@ async function runJob(config, job) {
     console.error('실패: ' + job.roleName + ' · ' + message);
   } finally {
     clearInterval(progressTimer);
+    clearInterval(heartbeatTimer);
     session?.close();
   }
 }

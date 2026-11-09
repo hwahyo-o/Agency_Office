@@ -35,6 +35,12 @@ npm run dev
 
 Authentication currently uses Supabase email and password. Configure email confirmation and password recovery in Supabase before inviting other users.
 
+## Connect a local Codex runner
+
+Apply the runner migration, add `SUPABASE_SERVICE_ROLE_KEY` only to the Next.js server environment, and deploy the web app before enrolling a machine. The key is used only by server API routes and must never be added to browser variables or runner configuration. In the app, choose **실행기 연결**, enroll a machine, and save the one-time token on the local PC. The token is stored as a SHA-256 hash in Supabase and cannot be displayed again.
+
+The runner requires Node.js 18 or later, the Codex CLI signed in on the PC, and a configured project directory. Copy `platform/runner/runner.example.json` to `~/.config/agency-office/runner.json`, then set `apiUrl`, `token`, and `projectDir`; restrict the file to the account owner (for example, `chmod 600`). Run `node platform/runner/runner.mjs` from the repository. The app-server transport and approval UI are still experimental/incomplete; tool approval requests are rejected until the web approval flow is implemented.
+
 ## Deploy
 
 Connect this repository to Vercel and set the environment variables in `web/.env.example`. Set the project root directory to `platform/web`. The Hobby deployment is for personal, non-commercial use only. Do not use it for company work; upgrade to Pro before that use begins. Deploy after the Next.js app is available in the selected Git branch.

@@ -46,7 +46,7 @@ The runner requires Node.js 18 or later, the selected CLI signed in on the PC, a
 
 Connect this repository to Vercel and set the environment variables in `web/.env.example`. Set the project root directory to `platform/web`. The Hobby deployment is for personal, non-commercial use only. Do not use it for company work; upgrade to Pro before that use begins. Deploy after the Next.js app is available in the selected Git branch.
 
-Firebase web configuration has been provided for project `ai-team-9c0b5`. Add its `NEXT_PUBLIC_FIREBASE_*` values in the Vercel project environment settings for the personal preview deployment; keep the values out of source control.
+Firebase web configuration has been provided for project `ai-team-9c0b5`. Add its `NEXT_PUBLIC_FIREBASE_*` values in the Vercel project environment settings for the personal preview deployment; keep the values out of source control. Add `SUPABASE_SERVICE_ROLE_KEY` as a server-only Vercel environment variable and never expose it to browser code or commit it.
 
 ## Next milestones
 

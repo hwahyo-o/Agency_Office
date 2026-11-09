@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 import { createInterface } from 'node:readline';
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { access, readFile } from 'node:fs/promises';
+import { access, mkdir, readFile } from 'node:fs/promises';
+import { promisify } from 'node:util';
 import path from 'node:path';
 import process from 'node:process';
 
+const execFileAsync = promisify(execFile);
 const POLL_INTERVAL_MS = 3_000;
 const EVENT_INTERVAL_MS = 2_000;
 
@@ -65,7 +67,64 @@ async function postEvent(config, event) {
   throw lastError ?? new Error('이벤트 저장에 실패했습니다.');
 }
 
-function createCodexSession(cwd) {
+async function createThreadWorktree(repositoryPath, threadId) {
+  const { stdout } = await execFileAsync('git', ['-C', repositoryPath, 'rev-parse', '--show-toplevel']);
+  const gitRoot = path.resolve(stdout.trim());
+  if (gitRoot !== path.resolve(repositoryPath)) {
+    throw new Error('projectDir은 Git 저장소 최상위 폴더여야 합니다.');
+  }
+
+  const safeThreadId = threadId.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 120);
+  if (!safeThreadId) throw new Error('작업 스레드 ID가 올바르지 않습니다.');
+
+  const branch = 'agency-office/thread-' + safeThreadId;
+  const worktreePath = path.join(path.dirname(repositoryPath), '.agency-office-worktrees', safeThreadId);
+  await mkdir(path.dirname(worktreePath), { recursive: true });
+
+  try {
+    await access(worktreePath);
+    const existing = await execFileAsync('git', ['-C', worktreePath, 'rev-parse', '--show-toplevel']);
+    if (path.resolve(existing.stdout.trim()) !== path.resolve(worktreePath)) {
+      throw new Error('작업 폴더가 기존 Git worktree와 일치하지 않습니다.');
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    await execFileAsync('git', ['-C', repositoryPath, 'worktree', 'add', '-b', branch, worktreePath, 'HEAD']);
+  }
+
+  return { branch, path: worktreePath };
+}
+
+async function requestApproval(config, job, request) {
+  const response = await fetch(config.apiUrl + '/api/runner/approvals', {
+    method: 'POST',
+    headers: {
+      authorization: 'Bearer ' + config.token,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ runId: job.runId, method: request.method, params: request.params }),
+  });
+
+  if (!response.ok) throw new Error('승인 요청을 저장하지 못했습니다. (HTTP ' + response.status + ')');
+  const { approvalId } = await response.json();
+  const deadline = Date.now() + 30 * 60 * 1000;
+
+  while (Date.now() < deadline) {
+    const statusResponse = await fetch(
+      config.apiUrl + '/api/runner/approvals?approvalId=' + encodeURIComponent(approvalId),
+      { headers: { authorization: 'Bearer ' + config.token }, cache: 'no-store' },
+    );
+    if (!statusResponse.ok) throw new Error('승인 상태를 확인하지 못했습니다. (HTTP ' + statusResponse.status + ')');
+
+    const approval = await statusResponse.json();
+    if (approval.decision) return approval.decision;
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+  }
+
+  return 'decline';
+}
+
+function createCodexSession(cwd, handleApproval) {
   const child = spawn('codex', ['app-server'], {
     cwd,
     stdio: ['pipe', 'pipe', 'inherit'],
@@ -107,10 +166,27 @@ function createCodexSession(cwd) {
       return;
     }
 
+    if (message.id !== undefined && [
+      'item/commandExecution/requestApproval',
+      'item/fileChange/requestApproval',
+    ].includes(message.method)) {
+      void handleApproval(message)
+        .then((decision) => {
+          child.stdin.write(JSON.stringify({ id: message.id, result: { decision } }) + '\n');
+        })
+        .catch((error) => {
+          child.stdin.write(JSON.stringify({
+            id: message.id,
+            error: { code: -32000, message: error instanceof Error ? error.message : '승인 요청 처리 실패' },
+          }) + '\n');
+        });
+      return;
+    }
+
     if (message.method && message.id !== undefined) {
       child.stdin.write(JSON.stringify({
         id: message.id,
-        error: { code: -32000, message: '승인 UI가 준비되지 않아 요청을 거절했습니다.' },
+        error: { code: -32000, message: '지원하지 않는 app-server 요청을 거절했습니다.' },
       }) + '\n');
     }
   });
@@ -205,12 +281,15 @@ function buildPrompt(job) {
 }
 
 async function runJob(config, job) {
-  const session = createCodexSession(config.projectDir);
+  let session;
+  let worktree;
   let sessionRef = job.sessionRef ?? null;
   let eventFailure = null;
   let progressTimer;
 
   try {
+    worktree = await createThreadWorktree(config.projectDir, job.threadId);
+    session = createCodexSession(worktree.path, (approvalRequest) => requestApproval(config, job, approvalRequest));
     sessionRef = await session.start(sessionRef);
     await postEvent(config, {
       runId: job.runId,
@@ -238,7 +317,7 @@ async function runJob(config, job) {
     await postEvent(config, {
       runId: job.runId,
       type: 'completed',
-      content: answer || 'Codex가 작업을 완료했지만 텍스트 응답은 반환하지 않았습니다.',
+      content: (answer || 'Codex가 작업을 완료했지만 텍스트 응답은 반환하지 않았습니다.') + '\n\n작업 브랜치: ' + worktree.branch + '\n작업 폴더: ' + worktree.path,
       sessionRef,
     });
     console.info('완료: ' + job.roleName + ' · ' + job.runId);
@@ -257,7 +336,7 @@ async function runJob(config, job) {
     console.error('실패: ' + job.roleName + ' · ' + message);
   } finally {
     clearInterval(progressTimer);
-    session.close();
+    session?.close();
   }
 }
 

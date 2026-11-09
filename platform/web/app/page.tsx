@@ -307,6 +307,8 @@ export default function HomePage() {
     if (!activeThreadId) {
       setMessages([]);
       setRuns([]);
+      setRunEvents([]);
+      setPendingApprovals([]);
       return;
     }
 
@@ -686,7 +688,7 @@ export default function HomePage() {
                               <div className="run-detail" key={run.id}>
                                 <span className="run-chip">
                                   <i className={run.status === 'completed' ? 'run-dot done' : 'run-dot'} />
-                                  {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {run.status === 'queued' ? '대기 중' : run.status}
+                                  {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {approval && run.status === 'running' ? '승인 대기' : run.status === 'queued' ? '대기 중' : run.status}
                                 </span>
                                 {latestEvent?.content && <p className="run-progress">{latestEvent.content}</p>}
                                 {approval && (

@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 type Machine = {
   id: string;
   name: string;
+  adapter: string;
   last_seen_at: string | null;
   revoked_at: string | null;
 };
@@ -21,6 +22,7 @@ export function RunnerConnection({ supabase, workspaceId }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [machines, setMachines] = useState<Machine[]>([]);
   const [machineName, setMachineName] = useState('내 PC');
+  const [machineAdapter, setMachineAdapter] = useState('codex');
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,7 @@ export function RunnerConnection({ supabase, workspaceId }: Props) {
 
     const { data, error } = await supabase
       .from('machines')
-      .select('id,name,last_seen_at,revoked_at')
+      .select('id,name,adapter,last_seen_at,revoked_at')
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: false });
 
@@ -68,7 +70,7 @@ export function RunnerConnection({ supabase, workspaceId }: Props) {
         authorization: 'Bearer ' + sessionData.session.access_token,
         'content-type': 'application/json',
       },
-      body: JSON.stringify({ workspaceId, name: machineName.trim() }),
+      body: JSON.stringify({ workspaceId, name: machineName.trim(), adapter: machineAdapter }),
     });
     const result = await response.json().catch(() => ({}));
     setLoading(false);
@@ -138,7 +140,7 @@ export function RunnerConnection({ supabase, workspaceId }: Props) {
                 <div className="machine-list">
                   {machines.map((machine) => (
                     <div className="machine-row" key={machine.id}>
-                      <span><strong>{machine.name}</strong><small>{machine.revoked_at ? '연결 해제됨' : machine.last_seen_at ? '마지막 연결 ' + new Date(machine.last_seen_at).toLocaleString('ko-KR') : '아직 연결되지 않음'}</small></span>
+                      <span><strong>{machine.name} · {machine.adapter.toUpperCase()}</strong><small>{machine.revoked_at ? '연결 해제됨' : machine.last_seen_at ? '마지막 연결 ' + new Date(machine.last_seen_at).toLocaleString('ko-KR') : '아직 연결되지 않음'}</small></span>
                       {!machine.revoked_at && <button type="button" className="text-button" onClick={() => void revoke(machine.id)}>해제</button>}
                     </div>
                   ))}
@@ -146,6 +148,13 @@ export function RunnerConnection({ supabase, workspaceId }: Props) {
                 </div>
                 <label className="field-label" htmlFor="runner-name">새 실행기 이름</label>
                 <input id="runner-name" className="task-title-input" maxLength={80} value={machineName} onChange={(event) => setMachineName(event.target.value)} />
+                <label className="field-label" htmlFor="runner-adapter">이 PC에서 사용할 CLI</label>
+                <select id="runner-adapter" className="task-title-input" value={machineAdapter} onChange={(event) => setMachineAdapter(event.target.value)}>
+                  <option value="codex">Codex CLI · 기본</option>
+                  <option value="claude">Claude Code CLI</option>
+                  <option value="gemini">Gemini CLI</option>
+                </select>
+                <p className="muted runner-adapter-note">Codex는 웹 승인 요청을 지원합니다. Claude/Gemini는 각 CLI의 기본 권한 설정을 사용합니다.</p>
                 <button className="primary-button runner-enroll-button" type="button" disabled={loading || !machineName.trim()} onClick={() => void enroll()}>
                   {loading ? '등록 중…' : '실행기 등록 및 토큰 발급'}
                 </button>

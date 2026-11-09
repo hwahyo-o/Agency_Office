@@ -9,7 +9,7 @@ The runner is a Node.js process on Linux/macOS or Windows WSL that polls the web
 - Create one isolated Git worktree and branch per conversation thread. Serialize employee runs within that thread so they share changes without editing the same checkout concurrently.
 - Forward progress, messages, and status updates to the assigned thread. A human can inspect the retained worktree branch; changes are not merged automatically.
 - Use explicit adapters: Codex is primary; Claude Code and Gemini CLI are supported optional adapters. OpenCode is not enabled yet.
-- Require an approval record before protected actions. The runner must reject unapproved requests to send external messages, publish, change permissions, delete unrecoverable data, or incur charges.
+- For Codex, require the web approval record for supported command and file-change approval requests; reject unknown approval request types. Claude Code and Gemini CLI use their own permission configuration, which this platform does not mediate.
 - Reconnect with backoff after network loss and resume queued work without duplicating a completed run.
 
 ## Codex adapter
@@ -26,7 +26,7 @@ The local CLI should use the user's existing Codex sign-in. Do not require an Op
 4. Copy `runner.example.json` to `~/.config/agency-office/runner.json`. Set the deployed `apiUrl`, one-time `token`, and absolute `projectDir` to the Git repository root.
 5. Restrict the config file to your account (for example, `chmod 600 ~/.config/agency-office/runner.json`) and run `node platform/runner/runner.mjs`.
 
-The runner sends task text, role instructions, progress, approval metadata, and final responses through the authenticated API. It does not receive a Supabase service key. Each thread gets a branch in a sibling `.agency-office-worktrees/<thread-id>` folder. Review the branch before merging it into your main checkout.
+The runner sends task text, role instructions, progress, approval metadata when supported by the adapter, and final responses through the authenticated API. It does not receive a Supabase service key. Each thread gets a branch in a sibling `.agency-office-worktrees/<thread-id>` folder. Review the branch before merging it into your main checkout.
 
 ## Trust boundary
 

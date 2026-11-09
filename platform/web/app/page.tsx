@@ -30,6 +30,7 @@ type AgentRun = {
   source_message_id: string;
   agent_template_id: string;
   status: string;
+  adapter: string;
 };
 type AgentRunEvent = { id: string; agent_run_id: string; event_type: string; content: string | null; created_at: string };
 type Approval = { id: string; agent_run_id: string; requested_action: string; request_payload: Record<string, unknown>; created_at: string };
@@ -63,6 +64,7 @@ export default function HomePage() {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [isComposing, setIsComposing] = useState(true);
   const [taskTitle, setTaskTitle] = useState('');
+  const [selectedAdapter, setSelectedAdapter] = useState('codex');
   const [draft, setDraft] = useState('');
   const [agentQuery, setAgentQuery] = useState('');
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
@@ -416,6 +418,7 @@ export default function HomePage() {
     setRunEvents([]);
     setPendingApprovals([]);
     setTaskTitle('');
+    setSelectedAdapter('codex');
     setDraft('');
     setAgentQuery('');
     setSelectedAgentIds([]);
@@ -499,7 +502,7 @@ export default function HomePage() {
       workspace_id: workspaceId,
       source_message_id: createdMessage.id,
       agent_template_id: agentId,
-      adapter: 'codex',
+      adapter: selectedAdapter,
       status: 'queued',
     }));
 
@@ -646,6 +649,13 @@ export default function HomePage() {
               </div>
               <label className="field-label" htmlFor="task-title">작업 제목 <span>선택</span></label>
               <input id="task-title" className="task-title-input" placeholder="예: 신규 랜딩 페이지 기획" value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} />
+              <label className="field-label" htmlFor="agent-adapter">실행 CLI</label>
+              <select id="agent-adapter" className="task-title-input" value={selectedAdapter} onChange={(event) => setSelectedAdapter(event.target.value)}>
+                <option value="codex">Codex CLI · 권장</option>
+                <option value="claude">Claude Code CLI</option>
+                <option value="gemini">Gemini CLI</option>
+              </select>
+              {selectedAdapter !== 'codex' && <p className="muted adapter-policy-note">선택한 CLI의 기본 권한 설정으로 실행합니다. 웹 승인 카드와 진행 이벤트는 Codex 전용입니다.</p>}
               <div className="picker-heading">
                 <label className="field-label" htmlFor="agent-search">호출할 직원</label>
                 <span>{selectedAgentIds.length}명 선택</span>

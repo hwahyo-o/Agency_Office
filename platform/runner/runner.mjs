@@ -144,6 +144,31 @@ function createCodexSession(cwd, handleApproval) {
       return;
     }
 
+    if (message.id !== undefined && message.method) {
+      if ([
+        'item/commandExecution/requestApproval',
+        'item/fileChange/requestApproval',
+      ].includes(message.method)) {
+        void handleApproval(message)
+          .then((decision) => {
+            child.stdin.write(JSON.stringify({ id: message.id, result: { decision } }) + '\n');
+          })
+          .catch((error) => {
+            child.stdin.write(JSON.stringify({
+              id: message.id,
+              error: { code: -32000, message: error instanceof Error ? error.message : '승인 요청 처리 실패' },
+            }) + '\n');
+          });
+        return;
+      }
+
+      child.stdin.write(JSON.stringify({
+        id: message.id,
+        error: { code: -32000, message: '지원하지 않는 app-server 요청을 거절했습니다.' },
+      }) + '\n');
+      return;
+    }
+
     if (message.id !== undefined && pending.has(message.id)) {
       const { resolve, reject, timer } = pending.get(message.id);
       clearTimeout(timer);
@@ -163,31 +188,6 @@ function createCodexSession(cwd, handleApproval) {
 
     if (message.method === 'turn/completed') {
       completion?.(message.params?.turn?.status ?? 'failed');
-      return;
-    }
-
-    if (message.id !== undefined && [
-      'item/commandExecution/requestApproval',
-      'item/fileChange/requestApproval',
-    ].includes(message.method)) {
-      void handleApproval(message)
-        .then((decision) => {
-          child.stdin.write(JSON.stringify({ id: message.id, result: { decision } }) + '\n');
-        })
-        .catch((error) => {
-          child.stdin.write(JSON.stringify({
-            id: message.id,
-            error: { code: -32000, message: error instanceof Error ? error.message : '승인 요청 처리 실패' },
-          }) + '\n');
-        });
-      return;
-    }
-
-    if (message.method && message.id !== undefined) {
-      child.stdin.write(JSON.stringify({
-        id: message.id,
-        error: { code: -32000, message: '지원하지 않는 app-server 요청을 거절했습니다.' },
-      }) + '\n');
     }
   });
 

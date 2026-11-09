@@ -58,6 +58,12 @@ export async function POST(request: Request) {
 
   if (runError || !run) return jsonError('이 실행기에 할당된 진행 중 작업이 아닙니다.', 404);
 
+  await admin
+    .from('approvals')
+    .update({ status: 'rejected', decided_at: new Date().toISOString() })
+    .eq('agent_run_id', run.id)
+    .eq('status', 'pending');
+
   const approvalType = body.method === 'item/fileChange/requestApproval' ? 'file_change' : 'command';
   const { data: approval, error } = await admin
     .from('approvals')
@@ -119,4 +125,60 @@ export async function GET(request: Request) {
       : null;
 
   return Response.json({ status: approval.status, decision }, { headers: { 'cache-control': 'no-store' } });
+}
+
+
+export async function PATCH(request: Request) {
+  let authenticated;
+  try {
+    authenticated = await authenticateRunner(request);
+  } catch {
+    return jsonError('Runner API server configuration is missing.', 503);
+  }
+
+  if (!authenticated) return jsonError('실행기 인증에 실패했습니다.', 401);
+
+  let body: { approvalId?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError('요청 형식이 올바르지 않습니다.', 400);
+  }
+
+  if (!body.approvalId || !uuidPattern.test(body.approvalId)) {
+    return jsonError('approvalId가 올바르지 않습니다.', 400);
+  }
+
+  const { admin, machine } = authenticated;
+  const { data: approval, error } = await admin
+    .from('approvals')
+    .select('id,agent_run_id,status')
+    .eq('id', body.approvalId)
+    .maybeSingle();
+
+  if (error || !approval) return jsonError('승인 요청을 찾을 수 없습니다.', 404);
+
+  const { data: run, error: runError } = await admin
+    .from('agent_runs')
+    .select('id')
+    .eq('id', approval.agent_run_id)
+    .eq('machine_id', machine.id)
+    .maybeSingle();
+
+  if (runError || !run) return jsonError('이 실행기의 승인 요청이 아닙니다.', 404);
+
+  const { data: updated, error: updateError } = await admin
+    .from('approvals')
+    .update({ status: 'rejected', decided_at: new Date().toISOString() })
+    .eq('id', approval.id)
+    .eq('status', 'pending')
+    .select('status')
+    .maybeSingle();
+
+  if (updateError) return jsonError('승인 요청을 종료하지 못했습니다.', 500);
+
+  const status = updated?.status ?? approval.status;
+  const decision = status === 'approved' ? 'accept' : 'decline';
+
+  return Response.json({ status, decision });
 }

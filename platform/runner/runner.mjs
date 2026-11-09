@@ -94,7 +94,7 @@ function createCodexSession(cwd) {
       child.stdin.write(JSON.stringify({
         id: message.id,
         error: { code: -32000, message: '승인 UI가 준비되지 않아 요청을 거절했습니다.' },
-      }) + '\\n');
+      }) + '\n');
     }
   });
 
@@ -108,7 +108,7 @@ function createCodexSession(cwd) {
 
   function request(method, params = {}) {
     const id = ++nextId;
-    child.stdin.write(JSON.stringify({ id, method, params }) + '\\n');
+    child.stdin.write(JSON.stringify({ id, method, params }) + '\n');
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -128,7 +128,7 @@ function createCodexSession(cwd) {
       await request('initialize', {
         clientInfo: { name: 'agency_office', title: 'Agency Office', version: '0.1.0' },
       });
-      child.stdin.write(JSON.stringify({ method: 'initialized', params: {} }) + '\\n');
+      child.stdin.write(JSON.stringify({ method: 'initialized', params: {} }) + '\n');
 
       if (sessionRef) {
         await request('thread/resume', { threadId: sessionRef });
@@ -176,13 +176,14 @@ function buildPrompt(job) {
     job.request,
     '',
     'Work only in the configured project directory. Do not publish, send external messages, change permissions, delete unrecoverable data, or incur charges. If a consequential action is required, explain that it needs human approval.',
-  ].join('\\n');
+  ].join('\n');
 }
 
 async function runJob(config, job) {
   const session = createCodexSession(config.projectDir);
   let sessionRef = job.sessionRef ?? null;
   let eventFailure = null;
+  let progressTimer;
 
   try {
     sessionRef = await session.start(sessionRef);
@@ -193,17 +194,20 @@ async function runJob(config, job) {
       sessionRef,
     });
 
-    const timer = setInterval(() => {
+    let latestProgress = '';
+    progressTimer = setInterval(() => {
+      const nextProgress = session.messageText.slice(-3000);
+      if (!nextProgress || nextProgress === latestProgress) return;
+      latestProgress = nextProgress;
       void postEvent(config, {
         runId: job.runId,
         type: 'progress',
-        content: session.messageText.slice(-3000),
+        content: nextProgress,
         sessionRef,
       }).catch((error) => { eventFailure = error; });
     }, EVENT_INTERVAL_MS);
 
     const answer = await session.run(sessionRef, buildPrompt(job));
-    clearInterval(timer);
     if (eventFailure) throw eventFailure;
 
     await postEvent(config, {
@@ -227,6 +231,7 @@ async function runJob(config, job) {
     }
     console.error('실패: ' + job.roleName + ' · ' + message);
   } finally {
+    clearInterval(progressTimer);
     session.close();
   }
 }

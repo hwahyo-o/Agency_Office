@@ -1,6 +1,6 @@
 # Emma-style AI team platform
 
-This folder contains a separate Next.js implementation beside the existing local AI Office app. The current milestone imports all valid Agency Agents roles, provides Supabase authentication, creates a personal workspace and default channel, and stores task threads, messages, and selected employee runs in Supabase. The local Codex runner claims work, isolates each thread in a Git worktree, returns replies, streams progress, and pauses supported command/file-change requests for a person's decision.
+This folder contains a separate Next.js implementation beside the existing local AI Office app. The current milestone imports all valid Agency Agents roles, provides Supabase authentication, creates a personal workspace and default channel, and stores task threads, messages, and selected employee runs in Supabase. The local runner claims adapter-matched work, isolates each thread in a Git worktree, renews active-run leases, and returns replies. Codex streams progress and pauses supported command/file-change requests for a person's decision.
 
 ## Architecture decisions
 

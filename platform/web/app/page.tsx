@@ -31,6 +31,8 @@ type AgentRun = {
   agent_template_id: string;
   status: string;
 };
+type AgentRunEvent = { id: string; agent_run_id: string; event_type: string; content: string | null; created_at: string };
+type Approval = { id: string; agent_run_id: string; requested_action: string; request_payload: Record<string, unknown>; created_at: string };
 
 function getTitle(draft: string, title: string) {
   const submittedTitle = title.trim();
@@ -54,6 +56,8 @@ export default function HomePage() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
+  const [runEvents, setRunEvents] = useState<AgentRunEvent[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<Approval[]>([]);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -245,6 +249,8 @@ export default function HomePage() {
 
     if (messageRows.length === 0) {
       setRuns([]);
+      setRunEvents([]);
+      setPendingApprovals([]);
       return;
     }
 
@@ -259,7 +265,42 @@ export default function HomePage() {
       return;
     }
 
-    setRuns((nextRuns ?? []) as AgentRun[]);
+    const loadedRuns = (nextRuns ?? []) as AgentRun[];
+    setRuns(loadedRuns);
+
+    if (loadedRuns.length === 0) {
+      setRunEvents([]);
+      setPendingApprovals([]);
+      return;
+    }
+
+    const runIds = loadedRuns.map((run) => run.id);
+    const [eventResult, approvalResult] = await Promise.all([
+      supabase
+        .from('agent_run_events')
+        .select('id,agent_run_id,event_type,content,created_at')
+        .in('agent_run_id', runIds)
+        .order('created_at', { ascending: false })
+        .limit(40),
+      supabase
+        .from('approvals')
+        .select('id,agent_run_id,requested_action,request_payload,created_at')
+        .in('agent_run_id', runIds)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false }),
+    ]);
+
+    if (eventResult.error) {
+      setNotice(eventResult.error.message);
+      return;
+    }
+    if (approvalResult.error) {
+      setNotice(approvalResult.error.message);
+      return;
+    }
+
+    setRunEvents((eventResult.data ?? []) as AgentRunEvent[]);
+    setPendingApprovals((approvalResult.data ?? []) as Approval[]);
   }, [supabase, workspaceId]);
 
   useEffect(() => {
@@ -308,6 +349,8 @@ export default function HomePage() {
     setAgents([]);
     setChannels([]);
     setThreads([]);
+    setRunEvents([]);
+    setPendingApprovals([]);
     setWorkspaceId(null);
     setActiveChannelId(null);
     setActiveThreadId(null);
@@ -344,10 +387,32 @@ export default function HomePage() {
     setIsComposing(true);
   }
 
+  async function decideApproval(approvalId: string, decision: 'approved' | 'rejected') {
+    if (!supabase || !activeThreadId) return;
+
+    const { data, error } = await supabase.rpc('decide_approval', {
+      target_approval: approvalId,
+      next_status: decision,
+    });
+    if (error) {
+      setNotice('승인 상태를 저장하지 못했습니다.');
+      return;
+    }
+    if (!data) {
+      setNotice('이미 처리된 승인 요청입니다.');
+      return;
+    }
+
+    setNotice(decision === 'approved' ? '작업 요청을 승인했습니다.' : '작업 요청을 거절했습니다.');
+    await loadThread(activeThreadId);
+  }
+
   function startNewTask() {
     setActiveThreadId(null);
     setMessages([]);
     setRuns([]);
+    setRunEvents([]);
+    setPendingApprovals([]);
     setTaskTitle('');
     setDraft('');
     setAgentQuery('');
@@ -614,12 +679,29 @@ export default function HomePage() {
                       <p>{message.content}</p>
                       {assignedRuns.length > 0 && (
                         <div className="run-list">
-                          {assignedRuns.map((run) => (
-                            <span className="run-chip" key={run.id}>
-                              <i className={run.status === 'completed' ? 'run-dot done' : 'run-dot'} />
-                              {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {run.status === 'queued' ? '대기 중' : run.status}
-                            </span>
-                          ))}
+                          {assignedRuns.map((run) => {
+                            const latestEvent = runEvents.find((event) => event.agent_run_id === run.id && event.event_type === 'progress');
+                            const approval = pendingApprovals.find((item) => item.agent_run_id === run.id);
+                            return (
+                              <div className="run-detail" key={run.id}>
+                                <span className="run-chip">
+                                  <i className={run.status === 'completed' ? 'run-dot done' : 'run-dot'} />
+                                  {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {run.status === 'queued' ? '대기 중' : run.status}
+                                </span>
+                                {latestEvent?.content && <p className="run-progress">{latestEvent.content}</p>}
+                                {approval && (
+                                  <section className="approval-card">
+                                    <strong>사람의 확인이 필요한 요청</strong>
+                                    <pre>{approval.requested_action}</pre>
+                                    <div>
+                                      <button className="primary-button" type="button" onClick={() => void decideApproval(approval.id, 'approved')}>한 번 승인</button>
+                                      <button className="secondary-button" type="button" onClick={() => void decideApproval(approval.id, 'rejected')}>거절</button>
+                                    </div>
+                                  </section>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </article>

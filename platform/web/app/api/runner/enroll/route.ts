@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const { data: userData, error: userError } = await userClient.auth.getUser(accessToken);
   if (userError || !userData.user) return jsonError('로그인 세션이 만료되었습니다.', 401);
 
-  let body: { workspaceId?: string; name?: string };
+  let body: { workspaceId?: string; name?: string; adapter?: string };
   try {
     body = await request.json();
   } catch {
@@ -28,6 +28,8 @@ export async function POST(request: Request) {
 
   const workspaceId = body.workspaceId?.trim();
   const name = body.name?.trim();
+  const adapter = body.adapter ?? 'codex';
+  if (!['codex', 'claude', 'gemini'].includes(adapter)) return jsonError('지원하지 않는 CLI입니다.', 400);
   if (!workspaceId || !name || name.length > 80) {
     return jsonError('업무 공간과 실행기 이름을 확인해 주세요.', 400);
   }
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
       workspace_id: workspaceId,
       name,
       runner_key_hash: runnerKeyHash,
-      adapter: 'codex',
+      adapter,
     })
     .select('id,name')
     .single();

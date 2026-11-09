@@ -121,7 +121,17 @@ async function requestApproval(config, job, request) {
     await new Promise((resolve) => setTimeout(resolve, 2_000));
   }
 
-  return 'decline';
+  const closeResponse = await fetch(config.apiUrl + '/api/runner/approvals', {
+    method: 'PATCH',
+    headers: {
+      authorization: 'Bearer ' + config.token,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ approvalId }),
+  });
+  if (!closeResponse.ok) throw new Error('시간 초과 승인을 종료하지 못했습니다.');
+  const closedApproval = await closeResponse.json();
+  return closedApproval.decision ?? 'decline';
 }
 
 function createCodexSession(cwd, handleApproval) {

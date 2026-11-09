@@ -10,7 +10,7 @@ import process from 'node:process';
 
 const execFileAsync = promisify(execFile);
 const POLL_INTERVAL_MS = 3_000;
-const EVENT_INTERVAL_MS = 2_000;
+const EVENT_INTERVAL_MS = 5_000;
 
 async function readConfig() {
   const configPath = process.env.AGENCY_OFFICE_CONFIG
@@ -284,7 +284,6 @@ async function runJob(config, job) {
   let session;
   let worktree;
   let sessionRef = job.sessionRef ?? null;
-  let eventFailure = null;
   let progressTimer;
 
   try {
@@ -308,11 +307,10 @@ async function runJob(config, job) {
         type: 'progress',
         content: nextProgress,
         sessionRef,
-      }).catch((error) => { eventFailure = error; });
+      }).catch((error) => console.warn('진행 상황 저장을 건너뜁니다:', error));
     }, EVENT_INTERVAL_MS);
 
     const answer = await session.run(sessionRef, buildPrompt(job));
-    if (eventFailure) throw eventFailure;
 
     await postEvent(config, {
       runId: job.runId,

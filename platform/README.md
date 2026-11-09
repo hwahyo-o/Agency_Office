@@ -4,7 +4,7 @@ This folder starts a separate Next.js implementation beside the existing local A
 
 ## Architecture decisions
 
-- **Web/control plane:** Next.js App Router, deployed to Vercel. Vercel provides first-party Next.js deployment. The free Hobby plan is for personal, non-commercial use.
+- **Web/control plane:** Next.js App Router, deployed to Vercel. Use Vercel Hobby for personal, non-commercial prototyping only. Upgrade to Vercel Pro before using the deployment for company work or another commercial purpose.
 - **Database and identity:** Supabase Auth and Postgres. Row Level Security is enabled in the initial schema.
 - **Analytics:** Firebase Analytics, initialized only in supported browsers and only when its public configuration is present.
 - **Agent runtime:** Codex CLI is the primary interactive session. Other compatible local CLIs are adapters. Persistent agent processes stay on a user's machine; Vercel functions do not host the long-lived CLI sessions.
@@ -37,7 +37,9 @@ Authentication currently uses Supabase email and password. Configure email confi
 
 ## Deploy
 
-Connect this repository to Vercel and set the environment variables in `web/.env.example`. Set the project root directory to `platform/web`. Deploy the web application only after adding the Supabase migration and importing employee definitions.
+Connect this repository to Vercel and set the environment variables in `web/.env.example`. Set the project root directory to `platform/web`. The Hobby deployment is for personal, non-commercial prototyping only. Do not use it for company work; upgrade to Pro before that use begins. Deploy the web application after adding the Supabase migration and importing employee definitions.
+
+Firebase web configuration has been provided for project `ai-team-9c0b5`. Add its `NEXT_PUBLIC_FIREBASE_*` values in the Vercel project environment settings for the personal preview deployment; keep the values out of source control.
 
 ## Next milestones
 

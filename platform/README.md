@@ -9,7 +9,7 @@ This folder contains a separate Next.js implementation beside the existing local
 - **Analytics:** Firebase Analytics, initialized only in supported browsers and only when its public configuration is present.
 - **Agent runtime:** Codex CLI is the default and primary session. Claude Code and Gemini CLI are optional local adapters. Persistent agent processes stay on a user's machine; Vercel functions do not host long-lived CLI sessions. The app invokes each locally installed CLI using the user's existing sign-in; it does not send a provider API key.
 - **Adapter limits:** Codex uses the app-server path for progress and web approval prompts; its app-server is experimental. Claude Code and Gemini CLI run non-interactively and can resume by CLI session ID, but their permission prompts and progress are not routed through the web UI. Each CLI's installed version, account entitlements, and own permission defaults apply; no free usage is guaranteed.
-- **Messaging model:** channels contain work threads; messages can call role-based employees; each run is attached to its source message and machine; requested consequential actions wait for human approval.
+- **Messaging model:** channels contain work threads; messages can call role-based employees; each run is attached to its source message and machine; supported Codex command/file-change requests wait for human approval.
 - **Role library:** import all valid agent definitions in the 18 source divisions from `msitarzewski/agency-agents`. Documentation, examples, strategy playbooks, and integration guides are not treated as employee profiles. Full Markdown instructions and source metadata remain stored verbatim. MIT attribution is stored with the import.
 
 ## Import the employee library
@@ -36,11 +36,11 @@ npm run dev
 
 Authentication currently uses Supabase email and password. Configure email confirmation and password recovery in Supabase before inviting other users.
 
-## Connect a local Codex runner
+## Connect a local CLI runner
 
 Apply the runner migration, add `SUPABASE_SERVICE_ROLE_KEY` only to the Next.js server environment, and deploy the web app before enrolling a machine. The key is used only by server API routes and must never be added to browser variables or runner configuration. In the app, choose **실행기 연결**, enroll a machine, and save the one-time token on the local PC. The token is stored as a SHA-256 hash in Supabase and cannot be displayed again.
 
-The runner requires Node.js 18 or later, the Codex CLI signed in on the PC, and a configured Git repository root. Copy `platform/runner/runner.example.json` to `~/.config/agency-office/runner.json`, then set `apiUrl`, `token`, and `projectDir`; restrict the file to the account owner (for example, `chmod 600`). Run `node platform/runner/runner.mjs` from the repository. Each work thread receives a separate branch under a sibling `.agency-office-worktrees` directory; runs in one thread are serialized and reuse that worktree. Changes are not merged automatically. The app-server transport remains experimental and unsupported for production workloads. The web UI supports one-time approve/decline for command and file-change requests; unknown request types are rejected.
+The runner requires Node.js 18 or later, the selected CLI signed in on the PC, and a configured Git repository root. The runner and task must use the same adapter. Copy `platform/runner/runner.example.json` to `~/.config/agency-office/runner.json`, then set `apiUrl`, `token`, and `projectDir`; restrict the file to the account owner (for example, `chmod 600`). Run `node platform/runner/runner.mjs` from the repository. Each work thread receives a separate branch under a sibling `.agency-office-worktrees` directory; runs in one thread are serialized and reuse that worktree. Changes are not merged automatically. The Codex app-server transport remains experimental and unsupported for production workloads. The web UI supports one-time approve/decline for supported Codex command and file-change requests; unknown request types are rejected. Claude Code and Gemini CLI use their own permission defaults, which are not overridden or mediated by the web approval UI.
 
 ## Deploy
 

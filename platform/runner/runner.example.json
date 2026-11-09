@@ -1,0 +1,5 @@
+{
+  "apiUrl": "https://your-vercel-preview.vercel.app",
+  "token": "paste-the-one-time-runner-token-here",
+  "projectDir": "/absolute/path/to/your/project"
+}

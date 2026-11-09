@@ -36,16 +36,33 @@ async function readConfig() {
 }
 
 async function postEvent(config, event) {
-  const response = await fetch(config.apiUrl + '/api/runner/events', {
-    method: 'POST',
-    headers: {
-      authorization: 'Bearer ' + config.token,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({ ...event, eventKey: randomUUID() }),
-  });
+  const body = JSON.stringify({ ...event, eventKey: randomUUID() });
+  let lastError;
 
-  if (!response.ok) throw new Error('이벤트 저장 실패 (HTTP ' + response.status + ')');
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(config.apiUrl + '/api/runner/events', {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer ' + config.token,
+          'content-type': 'application/json',
+        },
+        body,
+      });
+      if (response.ok) return;
+      if (response.status < 500 && response.status !== 429) {
+        throw new Error('이벤트 저장 실패 (HTTP ' + response.status + ')');
+      }
+      lastError = new Error('이벤트 저장 실패 (HTTP ' + response.status + ')');
+    } catch (error) {
+      lastError = error;
+      if (error instanceof Error && error.message.startsWith('이벤트 저장 실패 (HTTP 4')) throw error;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+  }
+
+  throw lastError ?? new Error('이벤트 저장에 실패했습니다.');
 }
 
 function createCodexSession(cwd) {
@@ -140,21 +157,29 @@ function createCodexSession(cwd) {
     },
     async run(threadId, prompt) {
       const completed = new Promise((resolve) => { completion = resolve; });
-      await request('turn/start', {
-        threadId,
-        input: [{ type: 'text', text: prompt }],
-      });
+      let timeoutId;
 
-      const status = await Promise.race([
-        completed,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Codex 실행 시간이 60분을 넘었습니다.')), 60 * 60 * 1000)),
-      ]);
+      try {
+        await request('turn/start', {
+          threadId,
+          input: [{ type: 'text', text: prompt }],
+        });
 
-      if (status !== 'completed') {
-        throw new Error('Codex 작업이 정상 완료되지 않았습니다: ' + status);
+        const status = await Promise.race([
+          completed,
+          new Promise((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error('Codex 실행 시간이 60분을 넘었습니다.')), 60 * 60 * 1000);
+          }),
+        ]);
+
+        if (status !== 'completed') {
+          throw new Error('Codex 작업이 정상 완료되지 않았습니다: ' + status);
+        }
+
+        return messageText.trim();
+      } finally {
+        clearTimeout(timeoutId);
       }
-
-      return messageText.trim();
     },
     close() {
       lines.close();

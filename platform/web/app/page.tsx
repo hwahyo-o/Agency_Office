@@ -270,6 +270,9 @@ export default function HomePage() {
     }
 
     void loadThread(activeThreadId);
+    const refreshTimer = setInterval(() => void loadThread(activeThreadId), 5_000);
+
+    return () => clearInterval(refreshTimer);
   }, [activeThreadId, loadThread]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {

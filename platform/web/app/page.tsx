@@ -178,6 +178,12 @@ export default function HomePage() {
       currentWorkspaceId = createdWorkspace.id;
     }
 
+    if (!currentWorkspaceId) {
+      setLoading(false);
+      setNotice('업무 공간을 확인하지 못했습니다. 다시 시도해 주세요.');
+      return;
+    }
+
     setWorkspaceId(currentWorkspaceId);
 
     const { data: existingChannels, error: channelReadError } = await supabase

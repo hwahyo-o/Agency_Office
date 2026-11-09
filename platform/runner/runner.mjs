@@ -12,6 +12,8 @@ import { runCliAdapter } from './adapters.mjs';
 const execFileAsync = promisify(execFile);
 const POLL_INTERVAL_MS = 3_000;
 const EVENT_INTERVAL_MS = 5_000;
+const RECONNECT_BASE_MS = 1_000;
+const RECONNECT_MAX_MS = 30_000;
 
 async function readConfig() {
   const configPath = process.env.AGENCY_OFFICE_CONFIG
@@ -384,6 +386,7 @@ async function main() {
   const config = await readConfig();
   console.info('Agency Office 로컬 러너가 시작됐습니다.');
   console.info('프로젝트 폴더: ' + config.projectDir);
+  let retryAttempt = 0;
 
   while (!process.signalCode) {
     try {
@@ -393,16 +396,21 @@ async function main() {
       });
 
       if (response.status === 204) {
+        retryAttempt = 0;
         await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
         continue;
       }
 
       if (!response.ok) throw new Error('대기열 응답 오류 (HTTP ' + response.status + ')');
+      retryAttempt = 0;
       await runJob(config, await response.json());
     } catch (error) {
       const message = error instanceof Error ? error.message : '연결 오류';
+      const delay = Math.min(RECONNECT_BASE_MS * (2 ** retryAttempt), RECONNECT_MAX_MS);
+      retryAttempt += 1;
       console.error(message);
-      await new Promise((resolve) => setTimeout(resolve, 5_000));
+      console.info('재연결을 ' + Math.round(delay / 1_000) + '초 후 다시 시도합니다.');
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 }

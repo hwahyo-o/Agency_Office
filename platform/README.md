@@ -49,8 +49,7 @@ Firebase web configuration has been provided for project `ai-team-9c0b5`. Add it
 
 ## Next milestones
 
-1. Implement the local Codex app-server adapter, session persistence, and reconnect behavior.
-2. Add secure machine enrollment and an outbound work-claim protocol; never expose a Supabase service key to the runner.
-3. Stream Codex events and employee replies into the corresponding work thread.
-4. Add other CLI adapters and approval controls.
-5. Complete end-to-end verification, then deploy the personal preview to Vercel Hobby.
+1. Add a human approval queue for Codex tool requests and show progress events in the work thread.
+2. Add adapters for other local interactive coding CLIs.
+3. Improve runner reconnect recovery and add an installer for Windows/macOS/Linux.
+4. Verify the complete app-server flow and then deploy the personal preview to Vercel Hobby.

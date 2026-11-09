@@ -182,14 +182,16 @@ begin
         finished_at = case when event_kind in ('completed', 'failed') then now() else null end
     where id = target_run;
 
-  if event_kind = 'completed' and nullif(trim(event_content), '') is not null then
+  if event_kind in ('completed', 'failed') and nullif(trim(event_content), '') is not null then
     insert into public.messages (
       workspace_id, thread_id, parent_message_id, actor_type, actor_id, content
     )
     values (
       run_workspace, run_thread,
       (select source_message_id from public.agent_runs where id = target_run),
-      'agent', run_template, left(event_content, 40000)
+      case when event_kind = 'completed' then 'agent' else 'system' end,
+      case when event_kind = 'completed' then run_template else null end,
+      left(event_content, 40000)
     );
   end if;
 

@@ -1,6 +1,6 @@
 # Emma-style AI team platform
 
-This folder starts a separate Next.js implementation beside the existing local AI Office app. The first milestone imports the Agency Agents role definitions into Supabase and provides an authenticated employee catalog. The local runner and threaded orchestration are the next implementation milestone.
+This folder contains a separate Next.js implementation beside the existing local AI Office app. The current milestone imports all valid Agency Agents roles, provides Supabase authentication, creates a personal workspace and default channel, and stores task threads, messages, and selected employee runs in Supabase. The app currently queues runs; the local Codex runner and streamed employee replies are still in progress.
 
 ## Architecture decisions
 
@@ -8,7 +8,7 @@ This folder starts a separate Next.js implementation beside the existing local A
 - **Database and identity:** Supabase Auth and Postgres. Row Level Security is enabled in the initial schema.
 - **Analytics:** Firebase Analytics, initialized only in supported browsers and only when its public configuration is present.
 - **Agent runtime:** Codex CLI is the primary interactive session. Other compatible local CLIs are adapters. Persistent agent processes stay on a user's machine; Vercel functions do not host the long-lived CLI sessions.
-- **Messaging model:** channels contain work threads; messages can mention role-based employees; each agent run is attached to its source message and machine; requested consequential actions wait for a human approval.
+- **Messaging model:** channels contain work threads; messages can call role-based employees; each run is attached to its source message and machine; requested consequential actions wait for human approval.
 - **Role library:** import all valid agent definitions in the 18 source divisions from `msitarzewski/agency-agents`. Documentation, examples, strategy playbooks, and integration guides are not treated as employee profiles. Full Markdown instructions and source metadata remain stored verbatim. MIT attribution is stored with the import.
 
 ## Import the employee library
@@ -23,7 +23,7 @@ node scripts/import-agency-agents.mjs
 
 The service key is only for this one-time import. Do not place it in the browser bundle or commit it. Import is idempotent by `source_path`.
 
-## Run the web catalog locally
+## Run the web app locally
 
 ```sh
 cd web
@@ -37,14 +37,14 @@ Authentication currently uses Supabase email and password. Configure email confi
 
 ## Deploy
 
-Connect this repository to Vercel and set the environment variables in `web/.env.example`. Set the project root directory to `platform/web`. The Hobby deployment is for personal, non-commercial prototyping only. Do not use it for company work; upgrade to Pro before that use begins. Deploy the web application after adding the Supabase migration and importing employee definitions.
+Connect this repository to Vercel and set the environment variables in `web/.env.example`. Set the project root directory to `platform/web`. The Hobby deployment is for personal, non-commercial use only. Do not use it for company work; upgrade to Pro before that use begins. Deploy after the Next.js app is available in the selected Git branch.
 
 Firebase web configuration has been provided for project `ai-team-9c0b5`. Add its `NEXT_PUBLIC_FIREBASE_*` values in the Vercel project environment settings for the personal preview deployment; keep the values out of source control.
 
 ## Next milestones
 
-1. Add a local runner that keeps each Codex CLI session alive and reconnects after network interruptions.
-2. Add secure machine enrollment and an outbound task-polling protocol; never expose a Supabase service key to the runner.
-3. Implement channels, task threads, mentions, handoffs, approvals, and persisted agent replies.
-4. Add CLI adapters and a user-visible connection/health status.
-5. Complete end-to-end verification and deploy after Supabase and Firebase projects are configured.
+1. Implement the local Codex app-server adapter, session persistence, and reconnect behavior.
+2. Add secure machine enrollment and an outbound work-claim protocol; never expose a Supabase service key to the runner.
+3. Stream Codex events and employee replies into the corresponding work thread.
+4. Add other CLI adapters and approval controls.
+5. Complete end-to-end verification, then deploy the personal preview to Vercel Hobby.

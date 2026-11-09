@@ -1,6 +1,6 @@
 # Emma-style AI team platform
 
-This folder contains a separate Next.js implementation beside the existing local AI Office app. The current milestone imports all valid Agency Agents roles, provides Supabase authentication, creates a personal workspace and default channel, and stores task threads, messages, and selected employee runs in Supabase. The local Codex runner can claim selected employees' work and write final replies to threads; human approvals and visible progress streaming are still in progress.
+This folder contains a separate Next.js implementation beside the existing local AI Office app. The current milestone imports all valid Agency Agents roles, provides Supabase authentication, creates a personal workspace and default channel, and stores task threads, messages, and selected employee runs in Supabase. The local Codex runner claims work, isolates each thread in a Git worktree, returns replies, streams progress, and pauses supported command/file-change requests for a person's decision.
 
 ## Architecture decisions
 
@@ -39,7 +39,7 @@ Authentication currently uses Supabase email and password. Configure email confi
 
 Apply the runner migration, add `SUPABASE_SERVICE_ROLE_KEY` only to the Next.js server environment, and deploy the web app before enrolling a machine. The key is used only by server API routes and must never be added to browser variables or runner configuration. In the app, choose **실행기 연결**, enroll a machine, and save the one-time token on the local PC. The token is stored as a SHA-256 hash in Supabase and cannot be displayed again.
 
-The runner requires Node.js 18 or later, the Codex CLI signed in on the PC, and a configured project directory. Copy `platform/runner/runner.example.json` to `~/.config/agency-office/runner.json`, then set `apiUrl`, `token`, and `projectDir`; restrict the file to the account owner (for example, `chmod 600`). Run `node platform/runner/runner.mjs` from the repository. The app-server transport and approval UI are still experimental/incomplete; tool approval requests are rejected until the web approval flow is implemented.
+The runner requires Node.js 18 or later, the Codex CLI signed in on the PC, and a configured Git repository root. Copy `platform/runner/runner.example.json` to `~/.config/agency-office/runner.json`, then set `apiUrl`, `token`, and `projectDir`; restrict the file to the account owner (for example, `chmod 600`). Run `node platform/runner/runner.mjs` from the repository. Each work thread receives a separate branch under a sibling `.agency-office-worktrees` directory; runs in one thread are serialized and reuse that worktree. Changes are not merged automatically. The app-server transport remains experimental and unsupported for production workloads. The web UI supports one-time approve/decline for command and file-change requests; unknown request types are rejected.
 
 ## Deploy
 
@@ -49,7 +49,7 @@ Firebase web configuration has been provided for project `ai-team-9c0b5`. Add it
 
 ## Next milestones
 
-1. Add a human approval queue for Codex tool requests and show progress events in the work thread.
-2. Add adapters for other local interactive coding CLIs.
-3. Improve runner reconnect recovery and add an installer for Windows/macOS/Linux.
-4. Verify the complete app-server flow and then deploy the personal preview to Vercel Hobby.
+1. Add adapters for other local interactive coding CLIs.
+2. Improve reconnect recovery and add an installer for Windows/macOS/Linux.
+3. Verify the app-server approval and worktree flows on supported Codex versions.
+4. Deploy the personal preview to Vercel Hobby after the remaining features are ready.

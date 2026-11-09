@@ -1,14 +1,14 @@
 # Local agent runner
 
-The runner is a Node.js process on Linux/macOS or Windows WSL that polls the web queue and starts a local interactive Codex CLI app-server session. It keeps the Codex thread reference across replies, streams progress, routes supported approval requests to the web UI, and returns final replies.
+The runner is a Node.js process on Linux/macOS or Windows WSL that polls the web queue and starts a local CLI session. Codex is the default adapter and uses its app-server session. Claude Code and Gemini CLI are optional adapters that use their own non-interactive commands and resume by CLI session ID. Each adapter returns final replies; only Codex currently streams progress and routes supported approval requests to the web UI.
 
 ## Required behavior
 
-- Start or resume an interactive Codex session for each selected employee and retain its session reference across messages.
+- Start or resume the selected CLI session for each employee and retain its session reference across messages. Register a runner with the same adapter selected for the task.
 - Subscribe to or poll the platform for work using a machine-scoped credential. Store the credential locally with owner-only file permissions and make it revocable from the web app.
 - Create one isolated Git worktree and branch per conversation thread. Serialize employee runs within that thread so they share changes without editing the same checkout concurrently.
 - Forward progress, messages, and status updates to the assigned thread. A human can inspect the retained worktree branch; changes are not merged automatically.
-- Use explicit adapter interfaces so Claude Code, Gemini CLI, OpenCode, and other local interactive CLIs can be connected without changing the message protocol.
+- Use explicit adapters: Codex is primary; Claude Code and Gemini CLI are supported optional adapters. OpenCode is not enabled yet.
 - Require an approval record before protected actions. The runner must reject unapproved requests to send external messages, publish, change permissions, delete unrecoverable data, or incur charges.
 - Reconnect with backoff after network loss and resume queued work without duplicating a completed run.
 
@@ -22,7 +22,7 @@ The local CLI should use the user's existing Codex sign-in. Do not require an Op
 
 1. Install Node.js 18+ and the Codex CLI, then sign in to Codex on that PC.
 2. Apply the Supabase migrations in filename order and configure `SUPABASE_SERVICE_ROLE_KEY` in the Next.js server environment only.
-3. Deploy the web control plane, sign in, open **실행기 연결**, register the PC, and copy the one-time token.
+3. Deploy the web control plane, sign in, open **실행기 연결**, choose the adapter for this runner, register the PC, and copy the one-time token.
 4. Copy `runner.example.json` to `~/.config/agency-office/runner.json`. Set the deployed `apiUrl`, one-time `token`, and absolute `projectDir` to the Git repository root.
 5. Restrict the config file to your account (for example, `chmod 600 ~/.config/agency-office/runner.json`) and run `node platform/runner/runner.mjs`.
 

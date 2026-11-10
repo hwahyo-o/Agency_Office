@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase';
 import { trackPageView } from '@/lib/firebase';
@@ -47,6 +47,16 @@ function getChannelSlug(name: string) {
   return (base || 'channel') + '-' + Date.now().toString(36);
 }
 
+function getRunStatusLabel(status: string) {
+  if (status === 'queued') return '실행 대기';
+  if (status === 'running') return '실행 중';
+  if (status === 'waiting_approval') return '승인 대기';
+  if (status === 'completed') return '완료';
+  if (status === 'failed') return '실패';
+  if (status === 'cancelled') return '취소됨';
+  return status;
+}
+
 export default function HomePage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,6 +69,8 @@ export default function HomePage() {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [runEvents, setRunEvents] = useState<AgentRunEvent[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<Approval[]>([]);
+  const processingApprovals = useRef(new Set<string>());
+  const [processingApprovalIds, setProcessingApprovalIds] = useState<string[]>([]);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -398,23 +410,34 @@ export default function HomePage() {
   }
 
   async function decideApproval(approvalId: string, decision: 'approved' | 'rejected') {
-    if (!supabase || !activeThreadId) return;
+    if (!supabase || !activeThreadId || processingApprovals.current.has(approvalId)) return;
 
-    const { data, error } = await supabase.rpc('decide_approval', {
-      target_approval: approvalId,
-      next_status: decision,
-    });
-    if (error) {
-      setNotice('승인 상태를 저장하지 못했습니다.');
-      return;
-    }
-    if (!data) {
-      setNotice('이미 처리된 승인 요청입니다.');
-      return;
-    }
+    processingApprovals.current.add(approvalId);
+    setProcessingApprovalIds([...processingApprovals.current]);
 
-    setNotice(decision === 'approved' ? '작업 요청을 승인했습니다.' : '작업 요청을 거절했습니다.');
-    await loadThread(activeThreadId);
+    try {
+      const { data, error } = await supabase.rpc('decide_approval', {
+        target_approval: approvalId,
+        next_status: decision,
+      });
+      if (error) {
+        setNotice('승인 상태를 저장하지 못했습니다.');
+        return;
+      }
+      if (!data) {
+        setNotice('이미 처리된 승인 요청입니다.');
+        return;
+      }
+
+      setPendingApprovals((current) => current.filter((approval) => approval.id !== approvalId));
+      setNotice(decision === 'approved' ? '작업 요청을 승인했습니다.' : '작업 요청을 거절했습니다.');
+      await loadThread(activeThreadId);
+    } catch {
+      setNotice('승인 상태를 저장하지 못했습니다. 다시 시도해 주세요.');
+    } finally {
+      processingApprovals.current.delete(approvalId);
+      setProcessingApprovalIds([...processingApprovals.current]);
+    }
   }
 
   function startNewTask() {
@@ -680,7 +703,7 @@ export default function HomePage() {
               </div>
               <label className="field-label" htmlFor="task-message">요청 내용</label>
               <textarea id="task-message" className="message-input" placeholder="목표, 참고 자료, 원하는 결과를 적어 주세요." value={draft} onChange={(event) => setDraft(event.target.value)} required />
-              <div className="composer-footer"><span>선택한 직원은 선택한 CLI 실행기에 전달됩니다.</span><button className="primary-button" disabled={loading || !draft.trim()}>작업 시작 <span>→</span></button></div>
+              <div className="composer-footer"><span>선택한 직원은 선택한 CLI 실행기에 전달됩니다.</span><button className="primary-button" disabled={loading || !draft.trim() || selectedAgentIds.length === 0}>작업 시작 <span>→</span></button></div>
             </form>
           ) : (
             <div className="thread-view">
@@ -704,7 +727,7 @@ export default function HomePage() {
                               <div className="run-detail" key={run.id}>
                                 <span className="run-chip">
                                   <i className={run.status === 'completed' ? 'run-dot done' : 'run-dot'} />
-                                  {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {run.adapter.toUpperCase()} · {approval && run.status === 'running' ? '승인 대기' : run.status === 'queued' ? '대기 중' : run.status}
+                                  {agentById.get(run.agent_template_id)?.role_name ?? '직원'} · {run.adapter.toUpperCase()} · {approval ? '승인 대기' : getRunStatusLabel(run.status)}
                                 </span>
                                 {latestEvent?.content && <p className="run-progress">{latestEvent.content}</p>}
                                 {approval && (
@@ -712,8 +735,8 @@ export default function HomePage() {
                                     <strong>사람의 확인이 필요한 요청</strong>
                                     <pre>{approval.requested_action}</pre>
                                     <div>
-                                      <button className="primary-button" type="button" onClick={() => void decideApproval(approval.id, 'approved')}>한 번 승인</button>
-                                      <button className="secondary-button" type="button" onClick={() => void decideApproval(approval.id, 'rejected')}>거절</button>
+                                      <button className="primary-button" type="button" disabled={processingApprovalIds.includes(approval.id)} onClick={() => void decideApproval(approval.id, 'approved')}>한 번 승인</button>
+                                      <button className="secondary-button" type="button" disabled={processingApprovalIds.includes(approval.id)} onClick={() => void decideApproval(approval.id, 'rejected')}>거절</button>
                                     </div>
                                   </section>
                                 )}
@@ -745,7 +768,7 @@ export default function HomePage() {
                   ))}
                 </div>
                 <textarea className="reply-input" aria-label="답장 내용" placeholder="메시지를 입력하세요…" value={draft} onChange={(event) => setDraft(event.target.value)} required />
-                <div className="composer-footer"><span>메시지와 직원 실행 상태가 이 스레드에 저장됩니다.</span><button className="primary-button" disabled={loading || !draft.trim()}>보내기 <span>→</span></button></div>
+                <div className="composer-footer"><span>메시지와 직원 실행 상태가 이 스레드에 저장됩니다.</span><button className="primary-button" disabled={loading || !draft.trim() || selectedAgentIds.length === 0}>보내기 <span>→</span></button></div>
               </form>
             </div>
           )}
